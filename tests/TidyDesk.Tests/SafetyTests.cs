@@ -97,6 +97,17 @@ public sealed class ContentSnifferTests : IDisposable
         Assert.Equal(expected, ContentSniffer.DetectExtension(path));
     }
 
+    [Theory]
+    [InlineData("heic", ".heic")]
+    [InlineData("M4A ", ".m4a")]
+    [InlineData("isom", ".mp4")]
+    public void Ftyp_brand_tells_photos_and_audio_from_video(string brand, string expected)
+    {
+        var path = Write("noname", [0, 0, 0, 0x18, .. "ftyp"u8, .. System.Text.Encoding.ASCII.GetBytes(brand), .. new byte[32]]);
+
+        Assert.Equal(expected, ContentSniffer.DetectExtension(path));
+    }
+
     [Fact]
     public void Unknown_content_returns_null()
     {
