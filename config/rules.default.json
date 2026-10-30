@@ -6,21 +6,22 @@
   // "name": folder name with the Turkish interface (default). "nameEn": folder name with the English interface.
   // Files without a known extension are identified by their content (file signature) when possible.
   "categories": [
-    { "name": "Belgeler",          "nameEn": "Documents", "extensions": [".doc", ".docx", ".docm", ".dot", ".dotx", ".odt", ".rtf", ".txt", ".md", ".xps", ".oxps"] },
+    { "name": "Belgeler",          "nameEn": "Documents", "extensions": [".doc", ".docx", ".docm", ".dot", ".dotx", ".odt", ".rtf", ".txt", ".md", ".xps", ".oxps", ".epub", ".mobi"] },
     { "name": "PDF",               "nameEn": "PDF", "extensions": [".pdf"] },
     { "name": "Tablolar",          "nameEn": "Spreadsheets", "extensions": [".xls", ".xlsx", ".xlsm", ".xlsb", ".xlt", ".xltx", ".csv", ".ods"] },
     { "name": "Sunumlar",          "nameEn": "Presentations", "extensions": [".ppt", ".pptx", ".pptm", ".pps", ".ppsx", ".pot", ".potx", ".odp"] },
-    { "name": "Görseller",         "nameEn": "Images", "extensions": [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tif", ".tiff", ".webp", ".heic", ".svg", ".ico"] },
-    { "name": "Video ve Ses",      "nameEn": "Video & Audio", "extensions": [".mp4", ".mov", ".avi", ".mkv", ".wmv", ".mp3", ".wav", ".m4a", ".wma"] },
+    { "name": "Görseller",         "nameEn": "Images", "extensions": [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tif", ".tiff", ".webp", ".heic", ".svg", ".ico", ".avif", ".jfif"] },
+    { "name": "Video ve Ses",      "nameEn": "Video & Audio", "extensions": [".mp4", ".mov", ".avi", ".mkv", ".wmv", ".mp3", ".wav", ".m4a", ".wma", ".m4v", ".webm", ".flac", ".ogg", ".aac"] },
     { "name": "E-postalar",        "nameEn": "Emails", "extensions": [".msg", ".eml"] },
-    { "name": "Arşivler",          "nameEn": "Archives", "extensions": [".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz", ".cab", ".iso"] },
+    { "name": "Arşivler",          "nameEn": "Archives", "extensions": [".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz", ".cab", ".iso", ".tgz"] },
     { "name": "Kurulum Dosyaları", "nameEn": "Installers", "extensions": [".exe", ".msi", ".msix", ".msixbundle", ".appx", ".appxbundle"] }
   ],
 
   // Files that match no category go to this folder
   "otherCategoryName": "Diğer",
   "otherCategoryNameEn": "Other",
-  "moveUncategorized": true,
+  // Off by default: unknown files stay where they are (a project folder's loose files must not be scattered)
+  "moveUncategorized": false,
 
   // These extensions are never touched (shortcuts, unfinished downloads, temporary files)
   "excludeExtensions": [".lnk", ".url", ".appref-ms", ".website", ".ini", ".tmp", ".crdownload", ".part", ".partial", ".download", ".opdownload"],

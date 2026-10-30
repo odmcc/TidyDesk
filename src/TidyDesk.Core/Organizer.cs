@@ -114,12 +114,22 @@ public sealed class Organizer(RuleSet rules, Func<string, string?> folderResolve
 
         var runId = journal.NewRunId();
         var reserved = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var folderDenied = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var move in plan.Moves)
         {
             var file = new FileInfo(move.SourcePath);
             try
             {
+                // The folder may have changed since planning (e.g. replaced by a link); check it again.
+                string? denied = null;
+                if (guard is not null && !folderDenied.TryGetValue(move.SourceFolder, out denied))
+                    folderDenied[move.SourceFolder] = denied = guard.Check(move.SourceFolder);
+                if (denied is not null)
+                {
+                    result.Failed.Add(new SkippedFile(move.SourcePath, denied));
+                    continue;
+                }
                 if (!file.Exists)
                 {
                     result.Failed.Add(new SkippedFile(move.SourcePath, "The file is no longer there."));
@@ -155,12 +165,14 @@ public sealed class Organizer(RuleSet rules, Func<string, string?> folderResolve
 
     public OrganizeResult Run() => Execute(CreatePlan());
 
-    /// <summary>Looks at the extension first; if there is none or it's unknown, tries to detect the type from the content.</summary>
+    /// <summary>Looks at the extension first; if there is none, tries to detect the type from the content.</summary>
     private (string? Category, bool ByContent) Categorize(FileInfo file)
     {
         if (CategoryOf(file.Extension) is { } byExtension)
             return (byExtension, false);
-        if (!FileSafety.IsCloudPlaceholder(file.Attributes) // don't read online-only OneDrive files: it would download them
+        // Only extensionless files are sniffed: a known-unknown extension (.dll, .sys) must not be mistaken for an installer.
+        if (file.Extension.Length == 0
+            && !FileSafety.IsCloudPlaceholder(file.Attributes) // don't read online-only OneDrive files: it would download them
             && ContentSniffer.DetectExtension(file.FullName) is { } detected
             && CategoryOf(detected) is { } byContent)
             return (byContent, true);

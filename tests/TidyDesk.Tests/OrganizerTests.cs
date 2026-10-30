@@ -31,7 +31,7 @@ public sealed class OrganizerTests : IDisposable
     [InlineData("photo.JPG", "Görseller")]
     [InlineData("backup.zip", "Arşivler")]
     [InlineData("setup.msi", "Kurulum Dosyaları")]
-    [InlineData("unknown.xyz", "Diğer")]
+    [InlineData("clip.webm", "Video ve Ses")]
     public void Moves_by_extension_into_category_and_month_folder(string name, string category)
     {
         var file = _box.CreateFile(_box.Downloads, name);
@@ -182,6 +182,73 @@ public sealed class OrganizerTests : IDisposable
 
         Assert.True(File.Exists(Path.Combine(_box.Organized(_box.Desktop), "Belgeler", "note.txt")));
         Assert.True(File.Exists(unknown));
+    }
+
+    [Fact]
+    public void Unknown_files_stay_put_by_default_and_go_to_other_when_enabled()
+    {
+        var unknown = _box.CreateFile(_box.Desktop, "special.xyz");
+        Assert.Empty(_box.CreateOrganizer().CreatePlan().Moves);
+
+        var rules = _box.DefaultRules();
+        rules.MoveUncategorized = true;
+        var plan = _box.CreateOrganizer(rules).CreatePlan();
+
+        Assert.Equal(Path.Combine(_box.Organized(_box.Desktop), "Diğer", Month(), "special.xyz"), Assert.Single(plan.Moves).DestinationPath);
+        Assert.True(File.Exists(unknown));
+    }
+
+    [Fact]
+    public void Dll_with_exe_signature_is_not_taken_for_an_installer()
+    {
+        var path = Path.Combine(_box.Desktop, "helper.dll");
+        File.WriteAllBytes(path, [0x4D, 0x5A, 0x90, 0x00, .. new byte[32]]);
+        File.SetCreationTime(path, TestSandbox.Now.AddDays(-30));
+        File.SetLastWriteTime(path, TestSandbox.Now.AddDays(-30));
+        var rules = _box.DefaultRules();
+        rules.MoveUncategorized = true;
+
+        var move = Assert.Single(_box.CreateOrganizer(rules).CreatePlan().Moves);
+
+        Assert.Equal("Diğer", move.Category);
+    }
+
+    [Fact]
+    public void Execute_rechecks_the_folder_and_moves_nothing_when_it_is_no_longer_allowed()
+    {
+        var file = _box.CreateFile(_box.Desktop, "report.docx");
+        var plan = _box.CreateOrganizer().CreatePlan();
+        var strict = new PathGuard(Path.Combine(_box.Root, "other-profile"), []); // the sandbox is outside this "profile"
+        var organizer = new Organizer(_box.DefaultRules(), _box.Resolve, _box.CreateJournal(), NullLog.Instance, () => TestSandbox.Now, strict);
+
+        var result = organizer.Execute(plan);
+
+        Assert.Empty(result.Moved);
+        Assert.Single(result.Failed);
+        Assert.True(File.Exists(file));
+    }
+
+    [Fact]
+    public void Junction_to_a_forbidden_folder_is_rejected()
+    {
+        var target = Path.Combine(Path.GetTempPath(), "TidyDeskLinkTarget", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(target);
+        var link = Path.Combine(_box.Root, "Linked");
+        try
+        {
+            using (var p = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd", $"/c mklink /J \"{link}\" \"{target}\"") { CreateNoWindow = true })!)
+                p.WaitForExit();
+            Assert.True(Directory.Exists(link), "mklink failed");
+
+            // The link sits inside the sandbox "profile", but its target does not.
+            Assert.NotNull(_box.Guard.Check(link));
+            Assert.Null(_box.Guard.Check(_box.Desktop));
+        }
+        finally
+        {
+            if (Directory.Exists(link)) Directory.Delete(link); // removes the link only, not the target
+            Directory.Delete(target, recursive: true);
+        }
     }
 
     [Fact]

@@ -78,7 +78,14 @@ public sealed class PathGuard
                 return "On the C: drive, only folders inside your own user folder can be used.";
         }
 
-        return Directory.Exists(full) ? null : "Folder not found.";
+        if (!Directory.Exists(full))
+            return "Folder not found.";
+
+        // A junction or symlink inside the profile can point at a system folder; check where it really leads.
+        // Other reparse points (OneDrive) return null here and are left alone.
+        if (Directory.ResolveLinkTarget(full, returnFinalTarget: true) is { } target)
+            return Check(target.FullName) is null ? null : "This folder is a link to a folder that can't be used.";
+        return null;
     }
 
     private static bool IsSameOrInside(string path, string parent) =>

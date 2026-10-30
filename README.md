@@ -17,9 +17,12 @@ It looks at the files in the folders you pick, figures out what each one is, and
 
 ## Download
 
-Get `TidyDesk.exe` from the [Releases](../../releases) page. That's it. There is no installer, and .NET does not need to be installed.
+Get one of these from the [Releases](../../releases) page. .NET does not need to be installed.
 
-Windows may show a SmartScreen warning the first time ("Windows protected your PC") because the exe is not code-signed. Click **More info → Run anyway**, or build it yourself from source (see below).
+- **`TidyDesk.exe`** (portable): just run it, from any folder or a USB stick. Leaves no trace outside its own folder.
+- **`TidyDesk-Setup.exe`** (installer): adds TidyDesk to the Start menu and to *Installed apps*, so it can be removed the usual way. Installs for your user only, no administrator rights needed.
+
+Windows may show a SmartScreen warning the first time ("Windows protected your PC") because the exe is not code-signed yet (see [docs/SIGNING.md](docs/SIGNING.md)). Click **More info → Run anyway**, or build it yourself from source (see below).
 
 ## How it works
 
@@ -40,7 +43,7 @@ Desktop\
 ## Features
 
 - **English and Turkish:** The app starts in Turkish; one click switches to English, and the choice is remembered. Folder names follow the language (`Documents`, `Images`… or `Belgeler`, `Görseller`…).
-- **Smart sorting:** Files are sorted by extension into Documents, PDF, Spreadsheets, Presentations, Images, Video & Audio, E-mails, Archives, Installers and Other. Files without an extension are recognized by their content (file signature). For example, an extensionless scanned PDF still goes to `PDF`, and renamed Word, Excel and PowerPoint files are told apart.
+- **Smart sorting:** Files are sorted by extension into Documents, PDF, Spreadsheets, Presentations, Images, Video & Audio, E-mails, Archives, and Installers. Files that fit no category stay where they are. Files without an extension are recognized by their content (file signature). For example, an extensionless scanned PDF still goes to `PDF`, and renamed Word, Excel and PowerPoint files are told apart.
 - **Leaves things alone:** Shortcuts (`.lnk`, `.url`), folders, hidden and system files, unfinished downloads (`.crdownload`, `.part`), Office lock files (`~$…`) and `desktop.ini` are never moved.
 - **Skips open files:** Files open in Word, Excel or another program are left where they are.
 - **Never overwrites:** If a file with the same name already exists, the new one gets a name like `report (2).pdf`.
@@ -59,6 +62,8 @@ Desktop\
 Desktop and Documents folders redirected to OneDrive or to a network share (Known Folder Move, Folder Redirection) are detected correctly.
 
 ## Portable
+
+The points below describe `TidyDesk.exe`. The installer only adds the Start menu entry and the uninstall entry; it still starts nothing on its own and settings stay in `TidyDesk-Data` next to the installed exe.
 
 - Single file: `TidyDesk.exe` (self-contained .NET runtime included).
 - Runs from any folder or a USB stick. It does not write to the registry and does not add itself to startup.
