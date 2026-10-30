@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TidyDesk</title>
+<meta name="description" content="TidyDesk Masaüstü, Belgeler ve İndirilenler klasörlerini tek tıkla türüne göre toplar. Ücretsiz, açık kaynak, hiçbir şeyi silmez, geri alınır.">
+<meta property="og:title" content="TidyDesk: Masaüstün tek tıkla toparlansın">
+<meta property="og:description" content="Windows için ücretsiz ve açık kaynak dosya toplayıcı. Hiçbir şeyi silmez, internete çıkmaz, her işlem geri alınır.">
+<meta property="og:image" content="logo.png">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --paper: #EAEFF6;
+  --panel: #F7F9FC;
+  --ink: #0F1B33;
+  --ink-soft: #46546F;
+  --line: #C9D3E3;
+  --blue: #2A6BE4;
+  --blue-deep: #1B4FB8;
+  --c-pdf: #D64545;
+  --c-sheet: #1F9D55;
+  --c-doc: #2A6BE4;
+  --c-img: #8B5CC8;
+  --c-arc: #C98A00;
+  --font: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font: 400 1.0625rem/1.6 var(--font); -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
+.wrap { width: min(1180px, 100% - 32px); margin-inline: auto; }
+
+/* ---------- header ---------- */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 0; }
+.brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.25rem; letter-spacing: -.01em; text-decoration: none; }
+.brand img { width: 36px; height: 36px; }
+.top-actions { display: flex; align-items: center; gap: 12px; }
+.lang { display: inline-flex; padding: 3px; background: #fff; border: 1px solid var(--line); border-radius: 999px; }
+.lang button { font: 600 .8125rem var(--font); border: 0; background: none; color: var(--ink-soft); padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+.lang button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  font: 600 1rem var(--font); text-decoration: none; cursor: pointer;
+  padding: 14px 26px; border-radius: 999px; border: 0;
+  background: linear-gradient(180deg, #4C8BF5, var(--blue-deep)); color: #fff;
+  box-shadow: 0 10px 28px -10px rgba(42,107,228,.7);
+  transition: transform .15s, box-shadow .15s;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 0 14px 30px -10px rgba(42,107,228,.8); }
+.btn.quiet { background: #fff; color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
+.btn.small { padding: 9px 18px; font-size: .9375rem; }
+
+/* ---------- hero ---------- */
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: clamp(32px, 5vw, 72px); align-items: center; padding: clamp(24px, 5vw, 64px) 0 clamp(56px, 8vw, 104px); }
+h1 { font-size: clamp(2.5rem, 5.6vw, 4.6rem); line-height: 1.02; letter-spacing: -.035em; font-weight: 700; margin: 0 0 22px; max-width: 12ch; }
+.lead { font-size: 1.1875rem; color: var(--ink-soft); max-width: 46ch; margin: 0 0 32px; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+.fine { font-size: .9375rem; color: var(--ink-soft); margin: 0; }
+
+.demo-wrap { min-width: 0; }
+.stage {
+  position: relative; height: 470px; border-radius: 22px; overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 85% -10%, #D5E3FB 0%, transparent 55%),
+    linear-gradient(180deg, #F7F9FC, #E3EAF5);
+  border: 1px solid var(--line);
+  box-shadow: 0 30px 60px -36px rgba(15,27,51,.45);
+}
+.stage-title { position: absolute; left: 18px; top: 14px; font: 600 .8125rem var(--font); color: var(--ink-soft); }
+.chip {
+  position: absolute; display: flex; align-items: center; gap: 8px; padding: 6px 11px 6px 8px;
+  background: #fff; border: 1px solid var(--line); border-radius: 9px;
+  font: 500 .78rem var(--mono); white-space: nowrap; color: var(--ink);
+  box-shadow: 0 6px 14px -8px rgba(15,27,51,.35);
+  transform: translate(0,0) rotate(var(--r)) scale(1);
+  transition: transform .85s cubic-bezier(.55,0,.2,1), opacity .45s ease .4s;
+  transition-delay: calc(var(--i) * 55ms), calc(var(--i) * 55ms + 380ms);
+  will-change: transform;
+}
+.chip i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); flex: none; }
+.chip.stay { border-style: dashed; background: rgba(255,255,255,.65); box-shadow: none; transition: none; }
+.chip.stay i { background: #9AA7BD; }
+.chip.stay::after {
+  content: attr(data-stay); position: absolute; left: 4px; top: calc(100% + 5px);
+  font: 600 .7rem var(--font); color: var(--ink-soft); opacity: 0; transition: opacity .4s .9s;
+}
+.stage.is-tidy .chip.stay::after { opacity: 1; }
+.stage.is-tidy .chip:not(.stay) { transform: translate(var(--dx), var(--dy)) rotate(0deg) scale(.35); opacity: 0; transition-delay: calc(var(--i) * 55ms), calc(var(--i) * 55ms + 380ms); }
+.stage:not(.is-tidy) .chip:not(.stay) { transition-delay: calc(var(--i) * 40ms), 0s; }
+
+.boxes { position: absolute; left: 14px; right: 14px; bottom: 14px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.box {
+  position: relative; height: 92px; background: #fff; border: 1px solid var(--line); border-radius: 4px 14px 14px 14px;
+  padding: 16px 10px 8px; display: flex; flex-direction: column; justify-content: space-between; min-width: 0;
+}
+.box::before { content: ""; position: absolute; left: -1px; top: -9px; width: 44%; height: 9px; background: var(--c); border-radius: 6px 6px 0 0; }
+.box b { font-size: .875rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.box output { font: 500 1.25rem var(--mono); color: var(--c); transition: transform .3s; }
+.box output.tick { transform: scale(1.25); }
+
+.demo-bar { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 20px; }
+.status { margin: 0; color: var(--ink-soft); font-size: .9375rem; }
+
+/* ---------- promises ---------- */
+.promises { display: grid; grid-template-columns: repeat(3, 1fr); border-block: 1px solid var(--line); }
+.promises > div { padding: 40px clamp(16px, 3vw, 40px) 44px; }
+.promises > div + div { border-left: 1px solid var(--line); }
+h2 { font-size: clamp(1.9rem, 3.6vw, 2.9rem); line-height: 1.08; letter-spacing: -.028em; font-weight: 700; margin: 0 0 20px; }
+h3 { font-size: 1.375rem; letter-spacing: -.015em; line-height: 1.2; margin: 0 0 10px; font-weight: 700; }
+p { margin: 0 0 1em; }
+.promises p, .steps p { color: var(--ink-soft); margin: 0; max-width: 40ch; }
+
+/* ---------- steps ---------- */
+.section { padding: clamp(64px, 9vw, 120px) 0; }
+.how { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(32px, 6vw, 88px); align-items: center; }
+.steps { list-style: none; padding: 0; margin: 28px 0 0; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 52px 1fr; gap: 6px 18px; padding: 22px 0; border-top: 1px solid var(--line); }
+.steps li::before { content: counter(s); grid-row: span 2; font: 500 1.9rem/1 var(--mono); color: var(--blue); }
+.shots { position: relative; padding-bottom: 50%; }
+.shots img { display: block; width: 64%; height: auto; border-radius: 18px; box-shadow: 0 34px 60px -30px rgba(15,27,51,.6); }
+.shots img + img { position: absolute; right: 0; bottom: 0; }
+
+/* ---------- scope ---------- */
+.scope { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 6vw, 88px); }
+.cats { display: flex; flex-wrap: wrap; gap: 10px; margin: 28px 0 14px; padding: 0; list-style: none; }
+.cats li { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: #fff; border: 1px solid var(--line); border-radius: 999px; font-weight: 600; font-size: .9375rem; }
+.cats li::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
+.note { color: var(--ink-soft); font-size: .9375rem; max-width: 52ch; }
+.left-alone { list-style: none; margin: 28px 0 0; padding: 0; }
+.left-alone li { position: relative; padding: 13px 0 13px 30px; border-top: 1px solid var(--line); }
+.left-alone li::before { content: ""; position: absolute; left: 0; top: calc(13px + .8em); width: 16px; border-top: 2px dashed #8795AD; }
+.left-alone code { font: 500 .85em var(--mono); color: var(--ink-soft); }
+
+/* ---------- download ---------- */
+.get { background: var(--ink); color: #fff; padding: clamp(64px, 9vw, 112px) 0; }
+.get h2 { max-width: 16ch; }
+.get .sub { color: #B6C2D9; max-width: 52ch; margin-bottom: 40px; }
+.dl { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(24px, 5vw, 72px); }
+.dl > div { border-top: 1px solid #2D3C5C; padding-top: 26px; }
+.dl p { color: #B6C2D9; max-width: 40ch; }
+.dl code { font: 500 .85em var(--mono); color: #fff; }
+.warn { margin-top: 44px; max-width: 68ch; color: #B6C2D9; font-size: .9375rem; border-left: 3px solid #4C8BF5; padding-left: 18px; }
+.btn.on-dark { background: #fff; color: var(--ink); box-shadow: none; }
+
+footer { padding: 32px 0 44px; color: var(--ink-soft); font-size: .9375rem; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 28px; justify-content: space-between; }
+footer nav { display: flex; gap: 22px; flex-wrap: wrap; }
+
+/* ---------- small screens ---------- */
+@media (max-width: 900px) {
+  .hero, .how, .scope, .dl { grid-template-columns: 1fr; }
+  h1 { max-width: none; }
+  .promises { grid-template-columns: 1fr; }
+  .promises > div + div { border-left: 0; border-top: 1px solid var(--line); }
+  .promises > div { padding-inline: 0; }
+  .stage { height: 500px; }
+  .box { height: 80px; padding-inline: 8px; }
+  .box b { font-size: .75rem; }
+  .top-actions .btn { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .chip, .box output, .btn { transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#"><img src="logo.png" alt="" width="36" height="36">TidyDesk</a>
+    <div class="top-actions">
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="tr" aria-pressed="true">TR</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <a class="btn small" href="#indir" data-k="nav.dl">İndir</a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div>
+      <h1 data-k="h1">Masaüstün tek tıkla toparlansın.</h1>
+      <p class="lead" data-k="lead">TidyDesk; Masaüstü, Belgeler ve İndirilenler'deki dosyaları türüne göre klasörlere ayırır. Hiçbir şeyi silmez, hiçbir yere göndermez, yaptığı her işlemi geri alabilirsin.</p>
+      <div class="cta">
+        <a class="btn" href="#indir" data-k="cta.dl">Windows için indir</a>
+        <a class="btn quiet" href="https://github.com/odmcc/TidyDesk" data-k="cta.src">Kaynak kodu GitHub'da</a>
+      </div>
+      <p class="fine" data-k="fine">Ücretsiz ve açık kaynak. Windows 10 ve 11, 64-bit.</p>
+    </div>
+
+    <div class="demo-wrap">
+      <div class="stage" id="stage" aria-label="Demo">
+        <span class="stage-title" data-k="stage.title">Masaüstü</span>
+        <div class="boxes" id="boxes"></div>
+      </div>
+      <div class="demo-bar">
+        <button class="btn" id="go" type="button"></button>
+        <p class="status" id="status" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="wrap">
+  <section class="promises" aria-label="Güvence">
+    <div>
+      <h3 data-k="p1.h">Hiçbir şey silinmez.</h3>
+      <p data-k="p1.t">Dosyalar yalnızca taşınır. Aynı adda bir dosya varsa yenisi <code>rapor (2).pdf</code> adını alır, üstüne yazılmaz.</p>
+    </div>
+    <div>
+      <h3 data-k="p2.h">Her işlem geri alınır.</h3>
+      <p data-k="p2.t">Her taşıma, olduğu anda günlüğe yazılır. Uygulamayı yarıda kapatsan bile Geri al çalışır.</p>
+    </div>
+    <div>
+      <h3 data-k="p3.h">İnternete hiç çıkmaz.</h3>
+      <p data-k="p3.t">Kodda ağ bağlantısı yok: ölçüm, güncelleme ya da yükleme yok. Dosya türünü anlamak için yalnızca ilk birkaç baytı okur.</p>
+    </div>
+  </section>
+</div>
+
+<section class="section">
+  <div class="wrap how">
+    <div>
+      <h2 data-k="how.h">Üç adımda biter.</h2>
+      <ol class="steps">
+        <li><h3 data-k="s1.h">Klasörleri seç</h3><p data-k="s1.t">Masaüstü, Belgeler ve İndirilenler hazır gelir. İstediğin başka bir klasörü de ekleyebilirsin. Her kartta kaç dosyanın düzenleneceği yazar.</p></li>
+        <li><h3 data-k="s2.h">Büyük düğmeye bas</h3><p data-k="s2.t">Dosyalar PDF, Belgeler, Tablolar, Görseller gibi klasörlere ayrılır. Uzantısı olmayan dosyalar içeriğinden tanınır.</p></li>
+        <li><h3 data-k="s3.h">Beğenmediysen geri al</h3><p data-k="s3.t">Tek tıkla her dosya eski yerine döner.</p></li>
+      </ol>
+    </div>
+    <div class="shots">
+      <img src="screenshot-main.png" alt="TidyDesk ana ekranı: Masaüstü, Belgeler ve İndirilenler kartları" width="720" height="688" loading="lazy">
+      <img src="screenshot-done.png" alt="16 dosya toparlandı ekranı, kategori sayılarıyla" width="720" height="688" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="wrap scope">
+    <div>
+      <h2 data-k="sc.h">Ne taşır?</h2>
+      <p data-k="sc.t">Uzantısına bakarak şu klasörlere ayırır:</p>
+      <ul class="cats">
+        <li style="--c:var(--c-doc)" data-k="c.doc">Belgeler</li>
+        <li style="--c:var(--c-pdf)">PDF</li>
+        <li style="--c:var(--c-sheet)" data-k="c.sheet">Tablolar</li>
+        <li style="--c:#E3742A" data-k="c.ppt">Sunumlar</li>
+        <li style="--c:var(--c-img)" data-k="c.img">Görseller</li>
+        <li style="--c:#C239B3" data-k="c.av">Video ve Ses</li>
+        <li style="--c:#00A39A" data-k="c.mail">E-postalar</li>
+        <li style="--c:var(--c-arc)" data-k="c.arc">Arşivler</li>
+        <li style="--c:#8795AD" data-k="c.inst">Kurulum Dosyaları</li>
+      </ul>
+      <p class="note" data-k="sc.n">Hiçbirine uymayan dosyalar yerinde kalır; dağınıklığı büyütmez.</p>
+    </div>
+    <div>
+      <h2 data-k="la.h">Neye dokunmaz?</h2>
+      <ul class="left-alone">
+        <li data-k="la.1">Kısayollar ve klasörler. Alt klasörlerin içine de girmez.</li>
+        <li data-k="la.2">Gizli ve sistem dosyaları, <code>desktop.ini</code>.</li>
+        <li data-k="la.3">Yarım kalmış indirmeler (<code>.crdownload</code>, <code>.part</code>).</li>
+        <li data-k="la.4">Word, Excel ya da başka bir programda açık olan dosyalar.</li>
+        <li data-k="la.5">Windows, Program Files ve AppData gibi sistem klasörleri. Bunlar seçilemez bile.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="get" id="indir">
+  <div class="wrap">
+    <h2 data-k="dl.h">İndir. İki seçenek var.</h2>
+    <p class="sub" data-k="dl.sub">İkisi de aynı program. Hangisinin sana uyduğunu sen seç.</p>
+    <div class="dl">
+      <div>
+        <h3 data-k="dl1.h">Taşınabilir</h3>
+        <p data-k="dl1.t"><code>TidyDesk.exe</code>: çift tıkla çalışır. USB bellekten de açılır, bilgisayarda iz bırakmaz. Silmek için dosyayı silmen yeter.</p>
+        <a class="btn on-dark" href="https://github.com/odmcc/TidyDesk/releases/latest/download/TidyDesk.exe" data-k="dl1.b">TidyDesk.exe'yi indir</a>
+      </div>
+      <div>
+        <h3 data-k="dl2.h">Kurulumlu</h3>
+        <p data-k="dl2.t"><code>TidyDesk-Setup.exe</code>: Başlat menüsüne eklenir, "Yüklü uygulamalar"dan kaldırılır. Yönetici izni istemez.</p>
+        <a class="btn on-dark" href="https://github.com/odmcc/TidyDesk/releases/latest/download/TidyDesk-Setup.exe" data-k="dl2.b">Kurulum dosyasını indir</a>
+      </div>
+    </div>
+    <p class="warn" data-k="dl.warn">Program henüz kod imzalı değil. Windows ilk açılışta "bilgisayarınızı korudu" uyarısı gösterebilir: <b>Ek bilgi</b>'ye, sonra <b>Yine de çalıştır</b>'a bas. Kaynak kodu açık; istersen kendin derleyebilirsin.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span data-k="ft.l">MIT lisansı. © odmcc</span>
+    <nav>
+      <a href="https://github.com/odmcc/TidyDesk" data-k="ft.src">Kaynak kodu</a>
+      <a href="https://github.com/odmcc/TidyDesk/releases" data-k="ft.rel">Sürümler</a>
+      <a href="https://github.com/odmcc/TidyDesk/issues" data-k="ft.bug">Sorun bildir</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+/* ---------- language: Turkish text lives in the HTML, English here ---------- */
+const EN = {
+  'nav.dl': 'Download', 'h1': 'Tidy your desktop in one click.',
+  'lead': 'TidyDesk sorts the files in your Desktop, Documents and Downloads into folders by type. It deletes nothing, sends nothing anywhere, and every run can be undone.',
+  'cta.dl': 'Download for Windows', 'cta.src': 'Source code on GitHub', 'fine': 'Free and open source. Windows 10 and 11, 64-bit.',
+  'stage.title': 'Desktop',
+  'p1.h': 'Nothing is deleted.', 'p1.t': 'Files are only moved. If a file with the same name exists, the new one becomes <code>report (2).pdf</code> instead of overwriting it.',
+  'p2.h': 'Every run can be undone.', 'p2.t': 'Each move is written to a journal the moment it happens, so Undo works even if you close the app halfway.',
+  'p3.h': 'It never goes online.', 'p3.t': 'The code has no networking: no telemetry, updates or uploads. To recognize a file type it reads only the first few bytes.',
+  'how.h': 'Done in three steps.',
+  's1.h': 'Pick your folders', 's1.t': 'Desktop, Documents and Downloads are ready to go. Add any other folder you like. Each card shows how many files will be organized.',
+  's2.h': 'Press the big button', 's2.t': 'Files are sorted into folders like PDF, Documents, Spreadsheets and Images. Files without an extension are recognized by their content.',
+  's3.h': 'Undo if you don\'t like it', 's3.t': 'One click puts every file back.',
+  'sc.h': 'What does it move?', 'sc.t': 'It sorts by extension into these folders:',
+  'c.doc': 'Documents', 'c.sheet': 'Spreadsheets', 'c.ppt': 'Presentations', 'c.img': 'Images', 'c.av': 'Video & Audio', 'c.mail': 'Emails', 'c.arc': 'Archives', 'c.inst': 'Installers',
+  'sc.n': 'Files that fit none of these stay where they are, so it never adds to the mess.',
+  'la.h': 'What does it leave alone?',
+  'la.1': 'Shortcuts and folders. It never goes into subfolders.', 'la.2': 'Hidden and system files, <code>desktop.ini</code>.',
+  'la.3': 'Unfinished downloads (<code>.crdownload</code>, <code>.part</code>).', 'la.4': 'Files that are open in Word, Excel or another program.',
+  'la.5': 'System folders like Windows, Program Files and AppData. They can\'t even be selected.',
+  'dl.h': 'Download. Two options.', 'dl.sub': 'Both are the same program. Pick the one that suits you.',
+  'dl1.h': 'Portable', 'dl1.t': '<code>TidyDesk.exe</code>: just double-click it. Runs from a USB stick and leaves no trace on the PC. To remove it, delete the file.', 'dl1.b': 'Download TidyDesk.exe',
+  'dl2.h': 'Installer', 'dl2.t': '<code>TidyDesk-Setup.exe</code>: adds TidyDesk to the Start menu and to Installed apps. No administrator rights needed.', 'dl2.b': 'Download the installer',
+  'dl.warn': 'The program is not code-signed yet. On first launch Windows may show "Windows protected your PC": press <b>More info</b>, then <b>Run anyway</b>. The source is open, so you can build it yourself.',
+  'ft.l': 'MIT license. © odmcc', 'ft.src': 'Source code', 'ft.rel': 'Releases', 'ft.bug': 'Report an issue'
+};
+const T = {
+  tr: { s1: 'Masaüstü: 13 öğe', s2: 'dosya toparlandı. Hiçbiri silinmedi.', s3: 'Bu 3 öğeye dokunulmadı.', go: n => `${n} dosyayı toparla`, undo: 'Geri al', stay: 'yerinde',
+        folders: ['PDF', 'Tablolar', 'Belgeler', 'Görseller', 'Arşivler'], done: n => `${n} dosya` },
+  en: { s1: 'Desktop: 13 items', s2: 'files tidied up. Nothing was deleted.', s3: 'These 3 items were left alone.', go: n => `Tidy up ${n} files`, undo: 'Undo', stay: 'left alone',
+        folders: ['PDF', 'Spreadsheets', 'Documents', 'Images', 'Archives'], done: n => `${n} files` }
+};
+const trHTML = new Map([...document.querySelectorAll('[data-k]')].map(e => [e, e.innerHTML]));
+let lang = null;
+try { lang = localStorage.getItem('td-lang'); } catch {}
+lang = lang || ((navigator.language || '').toLowerCase().startsWith('tr') ? 'tr' : 'en');
+
+/* ---------- demo ---------- */
+const FILES = [ // name, folder index (-1 = stays), color, left %, top %, rotation
+  ['fatura.pdf', 0, 'var(--c-pdf)', 3, 6, -4], ['butce.xlsx', 1, 'var(--c-sheet)', 33, 5, 3], ['foto.jpg', 3, 'var(--c-img)', 62, 7, -2],
+  ['Chrome.lnk', -1, '', 4, 18, 2], ['yedek.zip', 4, 'var(--c-arc)', 56, 18, 4],
+  ['rapor.docx', 2, 'var(--c-doc)', 28, 29, -3], ['tarama.pdf', 0, 'var(--c-pdf)', 62, 31, 3],
+  ['arsiv.7z', 4, 'var(--c-arc)', 3, 40, 3], ['notlar.txt', 2, 'var(--c-doc)', 34, 41, -2], ['ekran.png', 3, 'var(--c-img)', 64, 43, 2],
+  ['Projem/', -1, '', 2, 53, -3], ['liste.csv', 1, 'var(--c-sheet)', 28, 54, -4], ['bilinmeyen.xyz', -1, '', 40, 64, -1]
+];
+const FOLDER_COLORS = ['var(--c-pdf)', 'var(--c-sheet)', 'var(--c-doc)', 'var(--c-img)', 'var(--c-arc)'];
+const stage = document.getElementById('stage'), boxesEl = document.getElementById('boxes');
+const go = document.getElementById('go'), status = document.getElementById('status');
+const movable = FILES.filter(f => f[1] >= 0).length;
+const boxes = FOLDER_COLORS.map(c => {
+  const el = document.createElement('div'); el.className = 'box'; el.style.setProperty('--c', c);
+  el.innerHTML = '<b></b><output>0</output>'; boxesEl.appendChild(el); return el;
+});
+const chips = FILES.map(([name, folder, color, x, y, r], i) => {
+  const el = document.createElement('div');
+  el.className = 'chip' + (folder < 0 ? ' stay' : '');
+  el.style.cssText = `left:${x}%;top:${y}%;--r:${r}deg;--i:${i};--c:${color}`;
+  el.innerHTML = `<i></i>${name}`;
+  stage.appendChild(el); return { el, folder };
+});
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let tidy = false, touched = false;
+
+function render() {
+  const t = T[lang];
+  boxes.forEach((b, i) => { b.querySelector('b').textContent = t.folders[i]; });
+  chips.forEach(c => { if (c.folder < 0) c.el.dataset.stay = t.stay; });
+  go.textContent = tidy ? t.undo : t.go(movable);
+  status.textContent = tidy ? `${movable} ${t.s2} ${t.s3}` : t.s1;
+}
+function setCounts(on) {
+  boxes.forEach((b, i) => {
+    const out = b.querySelector('output'), n = on ? chips.filter(c => c.folder === i).length : 0;
+    if (out.textContent !== String(n)) { out.textContent = n; out.classList.add('tick'); setTimeout(() => out.classList.remove('tick'), 300); }
+  });
+}
+function toggle() {
+  if (!tidy) {
+    chips.forEach(c => {
+      if (c.folder < 0) return;
+      const a = c.el.getBoundingClientRect(), b = boxes[c.folder].getBoundingClientRect();
+      c.el.style.setProperty('--dx', `${b.left + b.width / 2 - (a.left + a.width / 2)}px`);
+      c.el.style.setProperty('--dy', `${b.top + b.height / 2 - (a.top + a.height / 2)}px`);
+    });
+  }
+  tidy = !tidy;
+  stage.classList.toggle('is-tidy', tidy);
+  setTimeout(() => setCounts(tidy), tidy && !reduce ? 900 : 0);
+  render();
+}
+go.addEventListener('click', () => { touched = true; toggle(); });
+if (!reduce) setTimeout(() => { if (!touched) toggle(); }, 1800); // one self-playing moment on load
+
+function applyLang(l) {
+  lang = l; document.documentElement.lang = l;
+  trHTML.forEach((tr, el) => { el.innerHTML = l === 'tr' ? tr : (EN[el.dataset.k] ?? tr); });
+  document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === l)));
+  try { localStorage.setItem('td-lang', l); } catch {}
+  render();
+}
+document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => applyLang(b.dataset.lang)));
+applyLang(lang);
+</script>
+</body>
+</html>
