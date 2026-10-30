@@ -30,7 +30,13 @@ public static class ContentSniffer
             if (StartsWith(header, "Rar!"u8)) return ".rar";
             if (StartsWith(header, [0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C])) return ".7z";
             if (StartsWith(header, [0x1F, 0x8B])) return ".gz";
-            if (read >= 8 && Encoding.ASCII.GetString(header, 4, 4) == "ftyp") return ".mp4";
+            if (read >= 12 && Encoding.ASCII.GetString(header, 4, 4) == "ftyp")
+                return Encoding.ASCII.GetString(header, 8, 4) switch
+                {
+                    "heic" or "heix" or "heim" or "heis" or "mif1" or "msf1" => ".heic",
+                    "M4A " => ".m4a",
+                    _ => ".mp4",
+                };
             if (StartsWith(header, "ID3"u8)) return ".mp3";
             if (StartsWith(header, "MZ"u8)) return ".exe";
             if (StartsWith(header, [0x50, 0x4B, 0x03, 0x04]))

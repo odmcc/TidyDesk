@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TidyDesk</title>
+<meta name="description" content="TidyDesk Masaüstü, Belgeler ve İndirilenler klasörlerini tek tıkla türüne göre toplar. Ücretsiz, açık kaynak, hiçbir şeyi silmez, geri alınır.">
+<meta property="og:title" content="TidyDesk: Masaüstün tek tıkla toparlansın">
+<meta property="og:description" content="Windows için ücretsiz ve açık kaynak dosya toplayıcı. Hiçbir şeyi silmez, internete çıkmaz, her işlem geri alınır.">
+<meta property="og:image" content="logo.png">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --paper: #EAEFF6;
+  --ink: #0F1B33;
+  --ink-soft: #46546F;
+  --line: #C9D3E3;
+  --blue: #2A6BE4;
+  --blue-deep: #1B4FB8;
+  --ok: #178A4B;
+  --no: #C73A3A;
+  --c-pdf: #D64545;
+  --c-sheet: #1F9D55;
+  --c-doc: #2A6BE4;
+  --c-img: #8B5CC8;
+  --c-arc: #C98A00;
+  --font: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 1.0625rem/1.6 var(--font); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
+.wrap { width: min(1200px, 100% - 32px); margin-inline: auto; }
+p { margin: 0 0 1em; }
+code { font: 500 .85em var(--mono); }
+
+/* ---------- sticky header ---------- */
+.bar { position: sticky; top: 0; z-index: 50; transition: background .25s, box-shadow .25s; }
+.bar.scrolled { background: rgba(234,239,246,.82); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 1px 0 var(--line); }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; }
+.brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.25rem; letter-spacing: -.01em; text-decoration: none; }
+.brand img { width: 36px; height: 36px; }
+.top-actions { display: flex; align-items: center; gap: 12px; }
+.lang { display: inline-flex; padding: 3px; background: #fff; border: 1px solid var(--line); border-radius: 999px; }
+.lang button { font: 600 .8125rem var(--font); border: 0; background: none; color: var(--ink-soft); padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+.lang button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  font: 600 1rem var(--font); text-decoration: none; cursor: pointer;
+  padding: 14px 26px; border-radius: 999px; border: 0;
+  background: linear-gradient(180deg, #4C8BF5, var(--blue-deep)); color: #fff;
+  box-shadow: 0 10px 28px -10px rgba(42,107,228,.7), inset 0 1px 0 rgba(255,255,255,.35);
+  transition: transform .15s, box-shadow .15s;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 0 14px 30px -10px rgba(42,107,228,.8), inset 0 1px 0 rgba(255,255,255,.35); }
+.btn.pressed { transform: scale(.95); }
+.btn.quiet { background: #fff; color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
+.btn.small { padding: 9px 18px; font-size: .9375rem; }
+.btn.on-dark { background: #fff; color: var(--ink); box-shadow: none; }
+
+/* ---------- hero ---------- */
+.hero-bg { position: absolute; inset: 0 0 auto 0; height: 980px; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(55% 45% at 82% 12%, rgba(76,139,245,.30), transparent 62%),
+    radial-gradient(40% 40% at 8% 78%, rgba(139,92,200,.16), transparent 62%); }
+.hero-bg::after { content: ""; position: absolute; inset: 0;
+  background-image: radial-gradient(rgba(15,27,51,.13) 1px, transparent 1.3px); background-size: 24px 24px;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 80%); mask-image: linear-gradient(180deg, #000 0%, transparent 80%); }
+.hero { position: relative; display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.2fr); gap: clamp(32px, 5vw, 76px); align-items: center; padding: clamp(24px, 4vw, 56px) 0 clamp(64px, 8vw, 112px); }
+h1 { font-size: clamp(2.7rem, 6.2vw, 5.3rem); line-height: .98; letter-spacing: -.04em; font-weight: 700; margin: 0 0 24px; max-width: 11ch; }
+.lead { font-size: 1.1875rem; color: var(--ink-soft); max-width: 46ch; margin: 0 0 32px; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+.fine { font-size: .9375rem; color: var(--ink-soft); margin: 0; }
+
+/* the demo is a tiny copy of the real app window */
+.stage {
+  position: relative; display: flex; flex-direction: column; height: 580px; border-radius: 18px;
+  background: linear-gradient(180deg, #F9FBFE, #E6EDF7); border: 1px solid #B9C6DC;
+  box-shadow: 0 50px 80px -40px rgba(15,27,51,.55), 0 0 0 8px rgba(255,255,255,.35);
+}
+.win-bar { display: flex; align-items: center; justify-content: space-between; height: 42px; padding: 0 14px; border-bottom: 1px solid var(--line); flex: none; }
+.win-title { display: flex; align-items: center; gap: 8px; font: 600 .8125rem var(--font); color: var(--ink-soft); }
+.win-title img { width: 16px; height: 16px; }
+.win-ctl { display: flex; gap: 18px; color: #7A88A3; font-size: .8rem; letter-spacing: 0; }
+.desk { position: relative; flex: 1; min-height: 0; }
+.chip {
+  position: absolute; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 6px 11px 6px 8px;
+  background: #fff; border: 1px solid var(--line); border-radius: 9px;
+  font: 500 .78rem var(--mono); white-space: nowrap; color: var(--ink);
+  box-shadow: 0 6px 14px -8px rgba(15,27,51,.4);
+  transform: translate(0,0) rotate(var(--r)) scale(1);
+  transition: transform .9s cubic-bezier(.55,0,.2,1), opacity .45s ease .45s;
+  transition-delay: calc(var(--i) * 55ms), calc(var(--i) * 55ms + 420ms);
+  will-change: transform;
+}
+.chip i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); flex: none; }
+.chip.stay { border-style: dashed; background: rgba(255,255,255,.65); box-shadow: none; transition: none; }
+.chip.stay i { background: #9AA7BD; }
+.chip.stay::after { content: attr(data-stay); position: absolute; left: 4px; top: calc(100% + 5px); font: 600 .7rem var(--font); color: var(--ink-soft); opacity: 0; transition: opacity .4s 1s; }
+.stage.is-tidy .chip.stay::after { opacity: 1; }
+.stage.is-tidy .chip:not(.stay) { transform: translate(var(--dx), var(--dy)) rotate(0deg) scale(.3); opacity: 0; }
+.stage:not(.is-tidy) .chip:not(.stay) { transition-delay: calc(var(--i) * 40ms), 0s; }
+
+.boxes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 14px 14px 0; flex: none; }
+.box {
+  position: relative; height: 96px; border: 1px solid var(--line); border-radius: 4px 14px 14px 14px; min-width: 0;
+  padding: 16px 10px 8px; display: flex; flex-direction: column; justify-content: space-between;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 13%, #fff), #fff 70%);
+  transition: transform .25s, box-shadow .25s;
+}
+.box::before { content: ""; position: absolute; left: -1px; top: -9px; width: 44%; height: 9px; background: var(--c); border-radius: 6px 6px 0 0; }
+.box b { font-size: .875rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.box output { font: 500 1.35rem var(--mono); color: var(--c); display: inline-block; transition: transform .3s; }
+.box output.tick { transform: scale(1.35); }
+.box.hit { transform: translateY(-4px); box-shadow: 0 14px 22px -14px var(--c); }
+
+.win-foot { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 16px 16px 18px; flex: none; }
+.status { margin: 0; color: var(--ink-soft); font-size: .9375rem; flex: 1; min-width: 180px; }
+.cursor { position: absolute; left: 0; top: 0; z-index: 9; width: 26px; height: 26px; pointer-events: none; opacity: 0; filter: drop-shadow(0 3px 4px rgba(15,27,51,.35)); }
+
+/* ---------- promises ---------- */
+.promises { display: grid; grid-template-columns: repeat(3, 1fr); border-block: 1px solid var(--line); background: rgba(255,255,255,.4); }
+.promises > div { padding: 44px clamp(16px, 3vw, 40px) 48px; }
+.promises > div + div { border-left: 1px solid var(--line); }
+.ico { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; color: var(--blue); background: #fff; border: 1px solid var(--line); margin-bottom: 20px; }
+.ico svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+h2 { font-size: clamp(2rem, 3.8vw, 3.1rem); line-height: 1.05; letter-spacing: -.032em; font-weight: 700; margin: 0 0 20px; }
+h1, h2 { text-wrap: balance; }
+h3 { font-size: 1.375rem; letter-spacing: -.015em; line-height: 1.2; margin: 0 0 10px; font-weight: 700; }
+.promises p, .steps p { color: var(--ink-soft); margin: 0; max-width: 40ch; }
+
+.section { padding: clamp(72px, 9vw, 128px) 0; }
+.section.tight-top { padding-top: 0; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(32px, 6vw, 88px); align-items: center; }
+
+/* ---------- steps ---------- */
+.steps { list-style: none; padding: 0; margin: 28px 0 0; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 52px 1fr; gap: 6px 18px; padding: 22px 0; border-top: 1px solid var(--line); }
+.steps li::before { content: counter(s); grid-row: span 2; font: 500 1.9rem/1 var(--mono); color: var(--blue); }
+.shots { position: relative; padding-bottom: 50%; perspective: 1400px; }
+.shots img { display: block; width: 64%; height: auto; border-radius: 18px; box-shadow: 0 40px 70px -32px rgba(15,27,51,.7); transform: rotateY(var(--ry, 0deg)) rotateX(var(--rx, 0deg)); transition: transform .25s ease-out; }
+.shots img + img { position: absolute; right: 0; bottom: 0; transform: rotateY(calc(var(--ry, 0deg) * 1.6)) rotateX(calc(var(--rx, 0deg) * 1.6)); }
+
+/* ---------- content sniffing ---------- */
+.sniff-card { background: var(--ink); color: #fff; border-radius: 20px; padding: 26px; box-shadow: 0 40px 70px -40px rgba(15,27,51,.8); }
+.tabs { display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
+.tabs button { font: 500 .8125rem var(--mono); color: #B6C2D9; background: transparent; border: 1px solid #2D3C5C; border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+.tabs button[aria-pressed="true"] { background: #fff; color: var(--ink); border-color: #fff; }
+.fname { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font: 500 1.15rem var(--mono); margin-bottom: 18px; }
+.fname small { font: 600 .75rem var(--font); color: #F2B8B8; background: rgba(214,69,69,.2); padding: 3px 9px; border-radius: 999px; }
+.hex { display: flex; flex-wrap: wrap; gap: 6px; font: 500 1rem var(--mono); margin-bottom: 20px; }
+.hex span { padding: 5px 7px; border-radius: 6px; background: #17264A; color: #8FA0C2; }
+.hex span.sig { background: var(--blue); color: #fff; animation: glow 1.6s ease-in-out infinite alternate; }
+@keyframes glow { from { box-shadow: 0 0 0 0 rgba(76,139,245,.0); } to { box-shadow: 0 0 18px 2px rgba(76,139,245,.7); } }
+.verdict { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 18px; border-top: 1px solid #2D3C5C; color: #B6C2D9; font-size: .9375rem; }
+.verdict b { color: #fff; font-size: 1.0625rem; }
+.verdict .tag { display: inline-flex; align-items: center; gap: 8px; background: #fff; color: var(--ink); font-weight: 700; padding: 7px 14px; border-radius: 10px; }
+.verdict .tag::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
+
+/* ---------- scope ---------- */
+.scope { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 6vw, 88px); }
+.cats { display: flex; flex-wrap: wrap; gap: 10px; margin: 28px 0 14px; padding: 0; list-style: none; }
+.cats li { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: #fff; border: 1px solid var(--line); border-radius: 999px; font-weight: 600; font-size: .9375rem; }
+.cats li::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
+.note { color: var(--ink-soft); font-size: .9375rem; max-width: 52ch; }
+.left-alone { list-style: none; margin: 28px 0 0; padding: 0; }
+.left-alone li { position: relative; padding: 13px 0 13px 30px; border-top: 1px solid var(--line); }
+.left-alone li::before { content: ""; position: absolute; left: 0; top: calc(13px + .8em); width: 16px; border-top: 2px dashed #8795AD; }
+.left-alone code { color: var(--ink-soft); }
+
+/* ---------- folder guard ---------- */
+.guard { list-style: none; margin: 0; padding: 0; background: #fff; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; box-shadow: 0 30px 60px -40px rgba(15,27,51,.45); }
+.guard li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 14px; padding: 14px 18px; border-top: 1px solid var(--line); align-items: center; }
+.guard li:first-child { border-top: 0; }
+.guard code { font-size: .9rem; overflow-wrap: anywhere; }
+.guard .why { grid-column: 1; font-size: .875rem; color: var(--ink-soft); }
+.pill { grid-row: span 2; grid-column: 2; font: 700 .75rem var(--font); padding: 5px 12px; border-radius: 999px; }
+.pill.ok { color: var(--ok); background: #DDF3E6; }
+.pill.no { color: var(--no); background: #FBE1E1; }
+
+/* ---------- download ---------- */
+.get { position: relative; background: var(--ink); color: #fff; padding: clamp(72px, 9vw, 120px) 0; overflow: hidden; }
+.get::before { content: ""; position: absolute; inset: 0; background: radial-gradient(50% 60% at 85% 0%, rgba(76,139,245,.35), transparent 65%), radial-gradient(rgba(255,255,255,.08) 1px, transparent 1.3px) 0 0 / 24px 24px; pointer-events: none; }
+.get .wrap { position: relative; }
+.get-logo { position: absolute; right: 0; top: -8px; width: clamp(72px, 12vw, 140px); filter: drop-shadow(0 20px 40px rgba(76,139,245,.6)); }
+.get h2 { max-width: 14ch; }
+.get .sub { color: #B6C2D9; max-width: 52ch; margin-bottom: 44px; }
+.dl { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(24px, 5vw, 72px); }
+.dl > div { border-top: 1px solid #2D3C5C; padding-top: 26px; }
+.dl p { color: #B6C2D9; max-width: 40ch; }
+.dl code { color: #fff; }
+.warn { margin-top: 48px; max-width: 68ch; color: #B6C2D9; font-size: .9375rem; border-left: 3px solid #4C8BF5; padding-left: 18px; }
+
+footer { padding: 32px 0 44px; color: var(--ink-soft); font-size: .9375rem; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 28px; justify-content: space-between; }
+footer nav { display: flex; gap: 22px; flex-wrap: wrap; }
+
+@media (max-width: 900px) {
+  .hero, .two, .scope, .dl { grid-template-columns: 1fr; }
+  h1 { max-width: none; }
+  .promises { grid-template-columns: 1fr; }
+  .promises > div + div { border-left: 0; border-top: 1px solid var(--line); }
+  .promises > div { padding-inline: 16px; }
+  .stage { height: 640px; }
+  .boxes { gap: 6px; padding-inline: 10px; }
+  .box { height: 80px; padding-inline: 8px; }
+  .box b { font-size: .72rem; }
+  .top-actions .btn { display: none; }
+  .get-logo { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .chip, .box, .box output, .btn, .shots img { transition: none !important; }
+  .hex span.sig { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="hero-bg" aria-hidden="true"></div>
+
+<div class="bar" id="bar">
+  <div class="wrap top">
+    <a class="brand" href="#"><img src="logo.png" alt="" width="36" height="36">TidyDesk</a>
+    <div class="top-actions">
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="tr" aria-pressed="true">TR</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <a class="btn small" href="#indir" data-k="nav.dl">İndir</a>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <section class="hero">
+    <div>
+      <h1 data-k="h1">Masaüstün tek tıkla toparlansın.</h1>
+      <p class="lead" data-k="lead">TidyDesk; Masaüstü, Belgeler ve İndirilenler'deki dosyaları türüne göre klasörlere ayırır. Hiçbir şeyi silmez, hiçbir yere göndermez, yaptığı her işlemi geri alabilirsin.</p>
+      <div class="cta">
+        <a class="btn" href="#indir" data-k="cta.dl">Windows için indir</a>
+        <a class="btn quiet" href="https://github.com/odmcc/TidyDesk" data-k="cta.src">Kaynak kodu GitHub'da</a>
+      </div>
+      <p class="fine" data-k="fine">Ücretsiz ve açık kaynak. Windows 10 ve 11, 64-bit.</p>
+    </div>
+
+    <div class="stage" id="stage" aria-label="Demo">
+      <div class="win-bar">
+        <span class="win-title"><img src="logo.png" alt="" width="16" height="16">TidyDesk</span>
+        <span class="win-ctl" aria-hidden="true"><span>&#8212;</span><span>&#9633;</span><span>&#10005;</span></span>
+      </div>
+      <div class="desk" id="desk"></div>
+      <div class="boxes" id="boxes"></div>
+      <div class="win-foot">
+        <button class="btn" id="go" type="button"></button>
+        <p class="status" id="status" aria-live="polite"></p>
+      </div>
+      <svg class="cursor" id="cursor" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 2l15 9.2-6.6 1.6 3.6 6.8-2.9 1.5-3.6-6.9L4.5 19z" fill="#fff" stroke="#0F1B33" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    </div>
+  </section>
+</div>
+
+<div class="wrap">
+  <section class="promises" aria-label="Güvence">
+    <div>
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <h3 data-k="p1.h">Hiçbir şey silinmez.</h3>
+      <p data-k="p1.t">Dosyalar yalnızca taşınır. Aynı adda bir dosya varsa yenisi <code>rapor (2).pdf</code> adını alır, üstüne yazılmaz.</p>
+    </div>
+    <div>
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></div>
+      <h3 data-k="p2.h">Her işlem geri alınır.</h3>
+      <p data-k="p2.t">Her taşıma, olduğu anda günlüğe yazılır. Uygulamayı yarıda kapatsan bile Geri al çalışır.</p>
+    </div>
+    <div>
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M2 8.8a15 15 0 0 1 20 0"/><path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8.5 16a5 5 0 0 1 7 0"/><path d="M12 19.5h.01"/><path d="M3 3l18 18"/></svg></div>
+      <h3 data-k="p3.h">İnternete hiç çıkmaz.</h3>
+      <p data-k="p3.t">Kodda ağ bağlantısı yok: ölçüm, güncelleme ya da yükleme yok. Dosya türünü anlamak için yalnızca ilk birkaç baytı okur.</p>
+    </div>
+  </section>
+</div>
+
+<section class="section">
+  <div class="wrap two">
+    <div>
+      <h2 data-k="how.h">Üç adımda biter.</h2>
+      <ol class="steps">
+        <li><h3 data-k="s1.h">Klasörleri seç</h3><p data-k="s1.t">Masaüstü, Belgeler ve İndirilenler hazır gelir. İstediğin başka bir klasörü de ekleyebilirsin. Her kartta kaç dosyanın düzenleneceği yazar.</p></li>
+        <li><h3 data-k="s2.h">Büyük düğmeye bas</h3><p data-k="s2.t">Dosyalar PDF, Belgeler, Tablolar, Görseller gibi klasörlere ayrılır. Uzantısı olmayan dosyalar içeriğinden tanınır.</p></li>
+        <li><h3 data-k="s3.h">Beğenmediysen geri al</h3><p data-k="s3.t">Tek tıkla her dosya eski yerine döner.</p></li>
+      </ol>
+    </div>
+    <div class="shots" id="shots">
+      <img src="screenshot-main.png" alt="TidyDesk ana ekranı: Masaüstü, Belgeler ve İndirilenler kartları" width="720" height="688" loading="lazy">
+      <img src="screenshot-done.png" alt="16 dosya toparlandı ekranı, kategori sayılarıyla" width="720" height="688" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section class="section tight-top">
+  <div class="wrap two">
+    <div>
+      <h2 data-k="sn.h">Adı yok mu? İçine bakar.</h2>
+      <p style="color:var(--ink-soft);max-width:46ch" data-k="sn.t">Uzantısı olmayan bir dosya bile ilk birkaç baytından tanınır. Taranmış bir PDF, PDF klasörüne; adı kaybolmuş bir Word dosyası, Belgeler'e gider. Okuma yalnızca bu bilgisayarda olur.</p>
+    </div>
+    <div class="sniff-card">
+      <div class="tabs" id="tabs"></div>
+      <div class="fname" id="fname"></div>
+      <div class="hex" id="hex" aria-label="İlk baytlar"></div>
+      <div class="verdict" id="verdict"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section tight-top">
+  <div class="wrap scope">
+    <div>
+      <h2 data-k="sc.h">Ne taşır?</h2>
+      <p data-k="sc.t">Uzantısına bakarak şu klasörlere ayırır:</p>
+      <ul class="cats">
+        <li style="--c:var(--c-doc)" data-k="c.doc">Belgeler</li>
+        <li style="--c:var(--c-pdf)">PDF</li>
+        <li style="--c:var(--c-sheet)" data-k="c.sheet">Tablolar</li>
+        <li style="--c:#E3742A" data-k="c.ppt">Sunumlar</li>
+        <li style="--c:var(--c-img)" data-k="c.img">Görseller</li>
+        <li style="--c:#C239B3" data-k="c.av">Video ve Ses</li>
+        <li style="--c:#00A39A" data-k="c.mail">E-postalar</li>
+        <li style="--c:var(--c-arc)" data-k="c.arc">Arşivler</li>
+        <li style="--c:#8795AD" data-k="c.inst">Kurulum Dosyaları</li>
+      </ul>
+      <p class="note" data-k="sc.n">Hiçbirine uymayan dosyalar yerinde kalır; dağınıklığı büyütmez.</p>
+    </div>
+    <div>
+      <h2 data-k="la.h">Neye dokunmaz?</h2>
+      <ul class="left-alone">
+        <li data-k="la.1">Kısayollar ve klasörler. Alt klasörlerin içine de girmez.</li>
+        <li data-k="la.2">Gizli ve sistem dosyaları, <code>desktop.ini</code>.</li>
+        <li data-k="la.3">Yarım kalmış indirmeler (<code>.crdownload</code>, <code>.part</code>).</li>
+        <li data-k="la.4">Word, Excel ya da başka bir programda açık olan dosyalar.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section tight-top">
+  <div class="wrap two">
+    <div>
+      <h2 data-k="gd.h">Yanlış klasörü seçemezsin.</h2>
+      <p style="color:var(--ink-soft);max-width:46ch" data-k="gd.t">Bir klasörü eklerken ve dosyaları taşımadan hemen önce TidyDesk klasörü denetler. Windows'un ve programların klasörleri, sürücü kökleri ve ağ klasörleri baştan reddedilir. Sistem sürücüsünde yalnızca kendi kullanıcı klasörünün içi kabul edilir.</p>
+    </div>
+    <ul class="guard" id="guard"></ul>
+  </div>
+</section>
+
+<section class="get" id="indir">
+  <div class="wrap">
+    <img class="get-logo" src="logo.png" alt="" width="140" height="140">
+    <h2 data-k="dl.h">İndir. İki seçenek var.</h2>
+    <p class="sub" data-k="dl.sub">İkisi de aynı program. Hangisinin sana uyduğunu sen seç.</p>
+    <div class="dl">
+      <div>
+        <h3 data-k="dl1.h">Taşınabilir</h3>
+        <p data-k="dl1.t"><code>TidyDesk.exe</code>: çift tıkla çalışır. USB bellekten de açılır, bilgisayarda iz bırakmaz. Silmek için dosyayı silmen yeter.</p>
+        <a class="btn on-dark" href="https://github.com/odmcc/TidyDesk/releases/latest/download/TidyDesk.exe" data-k="dl1.b">TidyDesk.exe'yi indir</a>
+      </div>
+      <div>
+        <h3 data-k="dl2.h">Kurulumlu</h3>
+        <p data-k="dl2.t"><code>TidyDesk-Setup.exe</code>: Başlat menüsüne eklenir, "Yüklü uygulamalar"dan kaldırılır. Yönetici izni istemez.</p>
+        <a class="btn on-dark" href="https://github.com/odmcc/TidyDesk/releases/latest/download/TidyDesk-Setup.exe" data-k="dl2.b">Kurulum dosyasını indir</a>
+      </div>
+    </div>
+    <p class="warn" data-k="dl.warn">Program henüz kod imzalı değil. Windows ilk açılışta "bilgisayarınızı korudu" uyarısı gösterebilir: <b>Ek bilgi</b>'ye, sonra <b>Yine de çalıştır</b>'a bas. Kaynak kodu açık; istersen kendin derleyebilirsin.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span data-k="ft.l">MIT lisansı. © odmcc</span>
+    <nav>
+      <a href="https://github.com/odmcc/TidyDesk" data-k="ft.src">Kaynak kodu</a>
+      <a href="https://github.com/odmcc/TidyDesk/releases" data-k="ft.rel">Sürümler</a>
+      <a href="https://github.com/odmcc/TidyDesk/issues" data-k="ft.bug">Sorun bildir</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+/* ---------- text: Turkish lives in the HTML, English here ---------- */
+const EN = {
+  'nav.dl': 'Download', 'h1': 'Tidy your desktop in one click.',
+  'lead': 'TidyDesk sorts the files in your Desktop, Documents and Downloads into folders by type. It deletes nothing, sends nothing anywhere, and every run can be undone.',
+  'cta.dl': 'Download for Windows', 'cta.src': 'Source code on GitHub', 'fine': 'Free and open source. Windows 10 and 11, 64-bit.',
+  'p1.h': 'Nothing is deleted.', 'p1.t': 'Files are only moved. If a file with the same name exists, the new one becomes <code>report (2).pdf</code> instead of overwriting it.',
+  'p2.h': 'Every run can be undone.', 'p2.t': 'Each move is written to a journal the moment it happens, so Undo works even if you close the app halfway.',
+  'p3.h': 'It never goes online.', 'p3.t': 'The code has no networking: no telemetry, updates or uploads. To recognize a file type it reads only the first few bytes.',
+  'how.h': 'Done in three steps.',
+  's1.h': 'Pick your folders', 's1.t': 'Desktop, Documents and Downloads are ready to go. Add any other folder you like. Each card shows how many files will be organized.',
+  's2.h': 'Press the big button', 's2.t': 'Files are sorted into folders like PDF, Documents, Spreadsheets and Images. Files without an extension are recognized by their content.',
+  's3.h': 'Undo if you don\'t like it', 's3.t': 'One click puts every file back.',
+  'sn.h': 'No name? It looks inside.', 'sn.t': 'Even a file without an extension is recognized from its first few bytes. A scanned PDF goes to PDF; a Word file that lost its name goes to Documents. Reading happens only on this computer.',
+  'sc.h': 'What does it move?', 'sc.t': 'It sorts by extension into these folders:',
+  'c.doc': 'Documents', 'c.sheet': 'Spreadsheets', 'c.ppt': 'Presentations', 'c.img': 'Images', 'c.av': 'Video & Audio', 'c.mail': 'Emails', 'c.arc': 'Archives', 'c.inst': 'Installers',
+  'sc.n': 'Files that fit none of these stay where they are, so it never adds to the mess.',
+  'la.h': 'What does it leave alone?',
+  'la.1': 'Shortcuts and folders. It never goes into subfolders.', 'la.2': 'Hidden and system files, <code>desktop.ini</code>.',
+  'la.3': 'Unfinished downloads (<code>.crdownload</code>, <code>.part</code>).', 'la.4': 'Files that are open in Word, Excel or another program.',
+  'gd.h': 'You can\'t pick the wrong folder.', 'gd.t': 'TidyDesk checks a folder when you add it and again right before files move. Windows and program folders, drive roots and network folders are refused outright. On the system drive only the inside of your own user folder is accepted.',
+  'dl.h': 'Download. Two options.', 'dl.sub': 'Both are the same program. Pick the one that suits you.',
+  'dl1.h': 'Portable', 'dl1.t': '<code>TidyDesk.exe</code>: just double-click it. Runs from a USB stick and leaves no trace on the PC. To remove it, delete the file.', 'dl1.b': 'Download TidyDesk.exe',
+  'dl2.h': 'Installer', 'dl2.t': '<code>TidyDesk-Setup.exe</code>: adds TidyDesk to the Start menu and to Installed apps. No administrator rights needed.', 'dl2.b': 'Download the installer',
+  'dl.warn': 'The program is not code-signed yet. On first launch Windows may show "Windows protected your PC": press <b>More info</b>, then <b>Run anyway</b>. The source is open, so you can build it yourself.',
+  'ft.l': 'MIT license. © odmcc', 'ft.src': 'Source code', 'ft.rel': 'Releases', 'ft.bug': 'Report an issue'
+};
+const T = {
+  tr: { s1: 'Masaüstü: 13 öğe', s2: 'dosya toparlandı. Hiçbiri silinmedi.', s3: 'Bu 3 öğeye dokunulmadı.', go: n => `${n} dosyayı toparla`, undo: 'Geri al', stay: 'yerinde',
+        folders: ['PDF', 'Tablolar', 'Belgeler', 'Görseller', 'Arşivler'], noExt: 'uzantı yok', first: 'İlk baytlar', sig: 'imzası', goesTo: 'klasörüne gider',
+        ok: 'Seçilebilir', no: 'Reddedilir' },
+  en: { s1: 'Desktop: 13 items', s2: 'files tidied up. Nothing was deleted.', s3: 'These 3 items were left alone.', go: n => `Tidy up ${n} files`, undo: 'Undo', stay: 'left alone',
+        folders: ['PDF', 'Spreadsheets', 'Documents', 'Images', 'Archives'], noExt: 'no extension', first: 'First bytes', sig: 'signature', goesTo: 'folder',
+        ok: 'Allowed', no: 'Refused' }
+};
+/* file samples: real signatures, as read by ContentSniffer */
+const SAMPLES = [
+  { name: 'tarama_0001', bytes: '25 50 44 46 2D 31 2E 34 0A 25 E2 E3 CF D3', sig: 4, label: '%PDF', folder: { tr: 'PDF', en: 'PDF' }, color: 'var(--c-pdf)', extra: null },
+  { name: 'ekran_kopya', bytes: '89 50 4E 47 0D 0A 1A 0A 00 00 00 0D 49 48', sig: 4, label: '\u2030PNG', folder: { tr: 'Görseller', en: 'Images' }, color: 'var(--c-img)', extra: null },
+  { name: 'sozlesme', bytes: '50 4B 03 04 14 00 06 00 08 00 00 00 21 00', sig: 4, label: 'PK (ZIP)', folder: { tr: 'Belgeler', en: 'Documents' }, color: 'var(--c-doc)',
+    extra: { tr: 'İçinde word/ klasörü var: bu bir Word dosyası.', en: 'It has a word/ folder inside: this is a Word file.' } }
+];
+/* examples of what the folder check says; messages follow PathGuard */
+const GUARD = [
+  ['C:\\Users\\sen\\Desktop', 1, { tr: 'Kendi kullanıcı klasörünün içi.', en: 'Inside your own user folder.' }],
+  ['D:\\Fotoğraflar', 1, { tr: 'Sistem sürücüsü dışındaki bir klasör.', en: 'A folder outside the system drive.' }],
+  ['C:\\Windows\\System32', 0, { tr: 'Sistem ve program klasörleri kullanılamaz.', en: 'System and program folders can\'t be used.' }],
+  ['C:\\Users\\sen\\AppData\\Roaming', 0, { tr: 'Sistem ve program klasörleri kullanılamaz.', en: 'System and program folders can\'t be used.' }],
+  ['C:\\', 0, { tr: 'Bir sürücünün tamamı kullanılamaz.', en: 'A whole drive can\'t be used.' }],
+  ['C:\\Users\\sen', 0, { tr: 'Tüm kullanıcı klasörü kullanılamaz; Masaüstü gibi içindeki bir klasör seç.', en: 'Your whole user folder can\'t be used; pick a folder inside it.' }],
+  ['\\\\sunucu\\paylasim', 0, { tr: 'Ağ klasörleri kullanılamaz.', en: 'Network folders can\'t be used.' }]
+];
+
+const trHTML = new Map([...document.querySelectorAll('[data-k]')].map(e => [e, e.innerHTML]));
+let lang = null;
+try { lang = localStorage.getItem('td-lang'); } catch {}
+lang = lang || ((navigator.language || '').toLowerCase().startsWith('tr') ? 'tr' : 'en');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* ---------- hero demo: a tiny TidyDesk window ---------- */
+const FILES = [ // name, folder (-1 = stays), color, left %, top %, rotation
+  ['fatura.pdf', 0, 'var(--c-pdf)', 3, 5, -4], ['butce.xlsx', 1, 'var(--c-sheet)', 33, 4, 3], ['foto.jpg', 3, 'var(--c-img)', 62, 6, -2],
+  ['Chrome.lnk', -1, '', 4, 19, 2], ['yedek.zip', 4, 'var(--c-arc)', 56, 18, 4],
+  ['rapor.docx', 2, 'var(--c-doc)', 28, 32, -3], ['tarama.pdf', 0, 'var(--c-pdf)', 62, 31, 3],
+  ['arsiv.7z', 4, 'var(--c-arc)', 3, 45, 3], ['notlar.txt', 2, 'var(--c-doc)', 34, 44, -2], ['ekran.png', 3, 'var(--c-img)', 64, 46, 2],
+  ['Projem/', -1, '', 2, 59, -3], ['liste.csv', 1, 'var(--c-sheet)', 28, 58, -4], ['bilinmeyen.xyz', -1, '', 40, 72, -1]
+];
+const FOLDER_COLORS = ['var(--c-pdf)', 'var(--c-sheet)', 'var(--c-doc)', 'var(--c-img)', 'var(--c-arc)'];
+const stage = document.getElementById('stage'), desk = document.getElementById('desk'), boxesEl = document.getElementById('boxes');
+const go = document.getElementById('go'), status = document.getElementById('status'), cursor = document.getElementById('cursor');
+const movable = FILES.filter(f => f[1] >= 0).length;
+const boxes = FOLDER_COLORS.map(c => {
+  const el = document.createElement('div'); el.className = 'box'; el.style.setProperty('--c', c);
+  el.innerHTML = '<b></b><output>0</output>'; boxesEl.appendChild(el); return el;
+});
+const chips = FILES.map(([name, folder, color, x, y, r], i) => {
+  const el = document.createElement('div');
+  el.className = 'chip' + (folder < 0 ? ' stay' : '');
+  el.style.cssText = `left:${x}%;top:${y}%;--r:${r}deg;--i:${i};--c:${color}`;
+  el.innerHTML = `<i></i>${name}`;
+  desk.appendChild(el); return { el, folder };
+});
+let tidy = false, touched = false;
+
+function renderDemo() {
+  const t = T[lang];
+  boxes.forEach((b, i) => { b.querySelector('b').textContent = t.folders[i]; });
+  chips.forEach(c => { if (c.folder < 0) c.el.dataset.stay = t.stay; });
+  go.textContent = tidy ? t.undo : t.go(movable);
+  status.textContent = tidy ? `${movable} ${t.s2} ${t.s3}` : t.s1;
+}
+function setCounts(on) {
+  boxes.forEach((b, i) => {
+    const out = b.querySelector('output'), n = on ? chips.filter(c => c.folder === i).length : 0;
+    if (out.textContent !== String(n)) {
+      out.textContent = n; out.classList.add('tick'); b.classList.add('hit');
+      setTimeout(() => { out.classList.remove('tick'); b.classList.remove('hit'); }, 320);
+    }
+  });
+}
+function toggle() {
+  if (!tidy) {
+    chips.forEach(c => {
+      if (c.folder < 0) return;
+      const a = c.el.getBoundingClientRect(), b = boxes[c.folder].getBoundingClientRect();
+      c.el.style.setProperty('--dx', `${b.left + b.width / 2 - (a.left + a.width / 2)}px`);
+      c.el.style.setProperty('--dy', `${b.top + b.height / 2 - (a.top + a.height / 2)}px`);
+    });
+  }
+  tidy = !tidy;
+  stage.classList.toggle('is-tidy', tidy);
+  setTimeout(() => setCounts(tidy), tidy && !reduce ? 950 : 0);
+  renderDemo();
+}
+go.addEventListener('click', () => { touched = true; toggle(); });
+
+/* one self-playing moment: a cursor glides to the button and presses it */
+async function intro() {
+  const s = stage.getBoundingClientRect(), b = go.getBoundingClientRect();
+  const tx = b.left - s.left + b.width * .5, ty = b.top - s.top + b.height * .45;
+  cursor.style.opacity = 1;
+  await cursor.animate([{ transform: `translate(${s.width * .8}px,${s.height * .3}px)` }, { transform: `translate(${tx}px,${ty}px)` }],
+    { duration: 1400, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' }).finished;
+  if (!touched && !tidy) { go.classList.add('pressed'); await sleep(170); go.classList.remove('pressed'); toggle(); }
+  await sleep(500);
+  cursor.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 400, fill: 'forwards' });
+}
+if (!reduce) setTimeout(() => { if (!touched) intro(); }, 1300);
+
+/* ---------- content sniffing demo ---------- */
+const tabsEl = document.getElementById('tabs'), fname = document.getElementById('fname'), hex = document.getElementById('hex'), verdict = document.getElementById('verdict');
+let sample = 0, sampleTimer = null;
+SAMPLES.forEach((s, i) => {
+  const b = document.createElement('button'); b.type = 'button'; b.textContent = s.name;
+  b.addEventListener('click', () => { clearInterval(sampleTimer); sample = i; renderSample(); });
+  tabsEl.appendChild(b);
+});
+function renderSample() {
+  const s = SAMPLES[sample], t = T[lang];
+  [...tabsEl.children].forEach((b, i) => b.setAttribute('aria-pressed', String(i === sample)));
+  fname.innerHTML = `${s.name} <small>${t.noExt}</small>`;
+  hex.setAttribute('aria-label', t.first);
+  hex.innerHTML = s.bytes.split(' ').map((h, i) => `<span class="${i < s.sig ? 'sig' : ''}">${h}</span>`).join('');
+  verdict.innerHTML = `<span><b>${s.label}</b> ${t.sig}</span><span class="tag" style="--c:${s.color}">${s.folder[lang]}</span>` + (s.extra ? `<span>${s.extra[lang]}</span>` : '');
+}
+if (!reduce) sampleTimer = setInterval(() => { sample = (sample + 1) % SAMPLES.length; renderSample(); }, 4200);
+
+/* ---------- folder check examples ---------- */
+const guardEl = document.getElementById('guard');
+function renderGuard() {
+  const t = T[lang];
+  guardEl.innerHTML = GUARD.map(([path, ok, why]) =>
+    `<li><code>${path}</code><span class="pill ${ok ? 'ok' : 'no'}">${ok ? t.ok : t.no}</span><span class="why">${why[lang]}</span></li>`).join('');
+}
+
+/* ---------- screenshots tilt toward the pointer (mouse only) ---------- */
+const shots = document.getElementById('shots');
+if (!reduce && matchMedia('(hover: hover)').matches) {
+  shots.addEventListener('pointermove', e => {
+    const r = shots.getBoundingClientRect();
+    shots.style.setProperty('--ry', `${((e.clientX - r.left) / r.width - .5) * 10}deg`);
+    shots.style.setProperty('--rx', `${-((e.clientY - r.top) / r.height - .5) * 8}deg`);
+  });
+  shots.addEventListener('pointerleave', () => { shots.style.setProperty('--ry', '0deg'); shots.style.setProperty('--rx', '0deg'); });
+}
+
+/* ---------- header gets a backdrop once you scroll ---------- */
+const bar = document.getElementById('bar');
+addEventListener('scroll', () => bar.classList.toggle('scrolled', scrollY > 8), { passive: true });
+
+function applyLang(l) {
+  lang = l; document.documentElement.lang = l;
+  trHTML.forEach((tr, el) => { el.innerHTML = l === 'tr' ? tr : (EN[el.dataset.k] ?? tr); });
+  document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === l)));
+  try { localStorage.setItem('td-lang', l); } catch {}
+  renderDemo(); renderSample(); renderGuard();
+}
+document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => applyLang(b.dataset.lang)));
+applyLang(lang);
+</script>
+</body>
+</html>
