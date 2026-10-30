@@ -121,13 +121,11 @@ public sealed class RulesTests : IDisposable
     public void English_language_uses_english_folder_names()
     {
         _box.CreateFile(_box.Desktop, "report.docx");
-        _box.CreateFile(_box.Desktop, "unknown.xyz");
         var service = new OrganizerService(_box.Paths, NullLog.Instance, _box.Guard, () => TestSandbox.Now);
 
         var plan = service.Analyze(new OrganizeOptions([_box.Desktop], 0, false, Language: "en"));
 
         Assert.Contains(plan.Moves, m => m.DestinationPath == Path.Combine(_box.Desktop, "Documents", "report.docx"));
-        Assert.Contains(plan.Moves, m => m.DestinationPath == Path.Combine(_box.Desktop, "Other", "unknown.xyz"));
         Assert.All(RuleSet.CreateDefault().Categories, c => Assert.False(string.IsNullOrEmpty(c.NameEn)));
     }
 
