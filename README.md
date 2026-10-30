@@ -19,7 +19,7 @@ It looks at the files in the folders you pick, figures out what each one is, and
 
 Get `TidyDesk.exe` from the [Releases](../../releases) page. That's it. There is no installer, and .NET does not need to be installed.
 
-Windows may show a SmartScreen warning the first time ("Windows protected your PC") because the exe is not code-signed. Click **More info → Run anyway**, or build it yourself from source (see below).
+Windows may show a SmartScreen warning the first time ("Windows protected your PC") because the exe is not code-signed yet (see [docs/SIGNING.md](docs/SIGNING.md)). Click **More info → Run anyway**, or build it yourself from source (see below).
 
 ## How it works
 
