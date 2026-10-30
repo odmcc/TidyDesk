@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>TidyDesk kapak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0B1426; --ink2:#14233F; --paper:#EAEFF6; --blue:#2A6BE4; --sky:#6FA2FF;
+  --pdf:#D64545; --sheet:#1F9D55; --doc:#2A6BE4; --img:#8B5CC8; --arc:#C98A00;
+  --font:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0}
+html,body{width:1200px;height:630px;overflow:hidden;background:var(--ink)}
+.card{position:relative;width:1200px;height:630px;font-family:var(--font);color:var(--paper);
+  background:
+    radial-gradient(620px 420px at 82% 18%, rgba(42,107,228,.55), transparent 70%),
+    radial-gradient(520px 380px at 96% 98%, rgba(139,92,200,.40), transparent 70%),
+    radial-gradient(480px 300px at 0% 100%, rgba(42,107,228,.18), transparent 70%),
+    linear-gradient(160deg,var(--ink2),var(--ink));}
+.card::before{content:"";position:absolute;inset:0;
+  background-image:radial-gradient(rgba(234,239,246,.10) 1.2px,transparent 1.4px);background-size:26px 26px;
+  mask-image:linear-gradient(90deg,transparent 0,#000 40%,#000 100%);}
+
+/* sol taraf */
+.left{position:absolute;left:68px;top:64px;width:560px}
+.brand{display:flex;align-items:center;gap:14px;font-weight:800;font-size:30px;letter-spacing:-.02em}
+.brand img{width:52px;height:52px;border-radius:13px;box-shadow:0 8px 28px rgba(42,107,228,.55)}
+h1{margin-top:58px;font-size:82px;line-height:.98;font-weight:800;letter-spacing:-.035em;text-wrap:balance}
+.sub{margin-top:26px;font-size:25px;line-height:1.38;color:#B6C3DA;font-weight:500;max-width:500px}
+.badges{position:absolute;left:0;top:490px;display:flex;gap:12px}
+.badges span{font-family:var(--mono);font-size:17px;padding:10px 16px;border-radius:999px;
+  background:rgba(234,239,246,.08);border:1px solid rgba(234,239,246,.20);color:#DCE6F7}
+.badges b{color:#7DE0A6;font-weight:500}
+
+/* sağ taraf: uygulama penceresi */
+.win{position:absolute;left:640px;top:88px;width:500px;height:440px;border-radius:18px;
+  background:linear-gradient(180deg,#F6F9FE,#E6EDF8);color:#0F1B33;
+  box-shadow:0 40px 80px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.35) inset;
+  transform:perspective(1400px) rotateY(-9deg) rotateX(4deg) rotateZ(1.5deg);transform-origin:left center}
+.bar{height:40px;display:flex;align-items:center;gap:8px;padding:0 16px;border-bottom:1px solid #D3DCEB;font-weight:800;font-size:15px}
+.bar i{width:11px;height:11px;border-radius:50%;background:#C9D3E3}
+.bar em{margin-left:8px;font-style:normal;color:#46546F;font-weight:500}
+.folders{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:196px 16px 0}
+.f{height:96px;border-radius:12px;background:#fff;border:1px solid #D3DCEB;border-top:5px solid var(--c);
+  padding:12px 8px 0;font-weight:800;font-size:14px;text-align:center;box-shadow:0 6px 14px rgba(15,27,51,.08)}
+.f small{display:block;margin-top:6px;font-family:var(--mono);font-weight:500;color:#46546F;font-size:13px}
+.btn{position:absolute;left:16px;bottom:18px;padding:12px 22px;border-radius:12px;font-weight:800;font-size:16px;color:#fff;
+  background:linear-gradient(180deg,#3B7CF2,#1B4FB8);box-shadow:0 8px 18px rgba(42,107,228,.45)}
+.ok{position:absolute;right:18px;bottom:28px;font-size:15px;font-weight:500;color:#178A4B}
+
+/* uçan dosyalar */
+.chip{position:absolute;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:#fff;
+  font-family:var(--mono);font-size:14px;color:#0F1B33;border:1px solid #D3DCEB;
+  box-shadow:0 10px 22px rgba(15,27,51,.22);transform:rotate(var(--r))}
+.chip::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--c)}
+.glow{position:absolute;left:560px;top:60px;width:300px;height:300px;border-radius:50%;
+  background:radial-gradient(circle,rgba(111,162,255,.35),transparent 65%);filter:blur(10px)}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="glow"></div>
+
+  <div class="left">
+    <div class="brand"><img src="../logo.png" alt="">TidyDesk</div>
+    <h1>Masaüstün tek tıkla toparlansın.</h1>
+    <p class="sub">Dosyalar türüne göre klasörlerine gider. Hiçbiri silinmez, hepsi geri alınır.</p>
+    <div class="badges">
+      <span><b>ücretsiz</b></span><span>açık kaynak</span><span>internetsiz</span>
+    </div>
+  </div>
+
+  <div class="win">
+    <div class="bar"><i></i><i></i><i></i><em>TidyDesk</em></div>
+    <div class="folders">
+      <div class="f" style="--c:var(--pdf)">PDF<small>4</small></div>
+      <div class="f" style="--c:var(--sheet)">Tablolar<small>3</small></div>
+      <div class="f" style="--c:var(--doc)">Belgeler<small>5</small></div>
+      <div class="f" style="--c:var(--img)">Görseller<small>6</small></div>
+      <div class="f" style="--c:var(--arc)">Arşivler<small>2</small></div>
+    </div>
+    <div class="btn">20 dosyayı topla</div>
+    <div class="ok">Geri al hazır</div>
+
+    <div class="chip" style="left:34px;top:62px;--r:-6deg;--c:var(--pdf)">fatura.pdf</div>
+    <div class="chip" style="left:190px;top:84px;--r:5deg;--c:var(--img)">IMG_2041.jpg</div>
+    <div class="chip" style="left:330px;top:58px;--r:-4deg;--c:var(--sheet)">bütçe.xlsx</div>
+    <div class="chip" style="left:60px;top:132px;--r:4deg;--c:var(--doc)">teklif.docx</div>
+    <div class="chip" style="left:250px;top:150px;--r:-7deg;--c:var(--arc)">yedek.zip</div>
+    <div class="chip" style="left:372px;top:124px;--r:6deg;--c:var(--img)">ekran.png</div>
+  </div>
+</div>
+</body>
+</html>
