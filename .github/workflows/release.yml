@@ -39,14 +39,17 @@ jobs:
           wait-for-completion: true
           output-artifact-directory: signed
 
-      - name: Pick the exe to release
+      # The installer packs whichever exe is in dist\ (the signed one when signing ran).
+      - name: Build the installer
         shell: pwsh
         run: |
-          if (Test-Path signed\TidyDesk.exe) { Copy-Item signed\TidyDesk.exe release.exe } else { Copy-Item dist\TidyDesk.exe release.exe }
-          Rename-Item release.exe TidyDesk.exe
+          if (Test-Path signed\TidyDesk.exe) { Copy-Item signed\TidyDesk.exe dist\TidyDesk.exe -Force }
+          $version = "${{ github.ref_name }}".TrimStart("v")
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$version" installer\TidyDesk.iss
+          if ($LASTEXITCODE -ne 0) { throw "Installer build failed." }
 
       - name: Create release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ github.ref_name }}" TidyDesk.exe --title "TidyDesk ${{ github.ref_name }}" --generate-notes
+        run: gh release create "${{ github.ref_name }}" dist\TidyDesk.exe dist\TidyDesk-Setup.exe --title "TidyDesk ${{ github.ref_name }}" --generate-notes

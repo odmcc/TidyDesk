@@ -17,7 +17,10 @@ It looks at the files in the folders you pick, figures out what each one is, and
 
 ## Download
 
-Get `TidyDesk.exe` from the [Releases](../../releases) page. That's it. There is no installer, and .NET does not need to be installed.
+Get one of these from the [Releases](../../releases) page. .NET does not need to be installed.
+
+- **`TidyDesk.exe`** (portable): just run it, from any folder or a USB stick. Leaves no trace outside its own folder.
+- **`TidyDesk-Setup.exe`** (installer): adds TidyDesk to the Start menu and to *Installed apps*, so it can be removed the usual way. Installs for your user only, no administrator rights needed.
 
 Windows may show a SmartScreen warning the first time ("Windows protected your PC") because the exe is not code-signed yet (see [docs/SIGNING.md](docs/SIGNING.md)). Click **More info → Run anyway**, or build it yourself from source (see below).
 
@@ -59,6 +62,8 @@ Desktop\
 Desktop and Documents folders redirected to OneDrive or to a network share (Known Folder Move, Folder Redirection) are detected correctly.
 
 ## Portable
+
+The points below describe `TidyDesk.exe`. The installer only adds the Start menu entry and the uninstall entry; it still starts nothing on its own and settings stay in `TidyDesk-Data` next to the installed exe.
 
 - Single file: `TidyDesk.exe` (self-contained .NET runtime included).
 - Runs from any folder or a USB stick. It does not write to the registry and does not add itself to startup.
