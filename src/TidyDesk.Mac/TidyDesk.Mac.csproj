@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- macOS app (Avalonia). The Windows app stays WPF in src/TidyDesk; both share TidyDesk.Core and Strings.cs.
+       It also runs on Windows, handy for trying the UI with the demo option (see the README). -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>TidyDesk</AssemblyName>
+    <RootNamespace>TidyDesk.Mac</RootNamespace>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <Product>TidyDesk</Product>
+    <Company>odmcc</Company>
+    <Copyright>Copyright (c) 2026 odmcc. MIT License.</Copyright>
+    <Version>3.2.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.5" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.5" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\TidyDesk\Strings.cs" Link="Strings.cs" />
+    <AvaloniaResource Include="..\TidyDesk\Assets\logo.png" Link="Assets\logo.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TidyDesk.Core\TidyDesk.Core.csproj" />
+  </ItemGroup>
+
+</Project>

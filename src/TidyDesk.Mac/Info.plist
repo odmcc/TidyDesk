@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Copied into TidyDesk.app/Contents by scripts/package-mac.sh; __VERSION__ is replaced with the release version. -->
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>TidyDesk</string>
+    <key>CFBundleDisplayName</key>
+    <string>TidyDesk</string>
+    <key>CFBundleIdentifier</key>
+    <string>io.github.odmcc.tidydesk</string>
+    <key>CFBundleExecutable</key>
+    <string>TidyDesk</string>
+    <key>CFBundleIconFile</key>
+    <string>TidyDesk.icns</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>__VERSION__</string>
+    <key>CFBundleVersion</key>
+    <string>__VERSION__</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>14.0</string>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.utilities</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright (c) 2026 odmcc. MIT License.</string>
+    <!-- Shown by macOS when the app first opens these folders -->
+    <key>NSDesktopFolderUsageDescription</key>
+    <string>TidyDesk, Masaüstü'ndeki dosyaları türlerine göre klasörlere taşır. / TidyDesk sorts the files on your Desktop into folders by type.</string>
+    <key>NSDocumentsFolderUsageDescription</key>
+    <string>TidyDesk, Belgeler'deki dosyaları türlerine göre klasörlere taşır. / TidyDesk sorts the files in Documents into folders by type.</string>
+    <key>NSDownloadsFolderUsageDescription</key>
+    <string>TidyDesk, İndirilenler'deki dosyaları türlerine göre klasörlere taşır. / TidyDesk sorts the files in Downloads into folders by type.</string>
+    <key>NSRemovableVolumesUsageDescription</key>
+    <string>TidyDesk, seçtiğiniz USB bellekteki dosyaları türlerine göre klasörlere taşır. / TidyDesk sorts the files on the USB drive you choose into folders by type.</string>
+</dict>
+</plist>

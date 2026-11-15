@@ -1,0 +1,13 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="TidyDesk.Mac.App"
+             Name="TidyDesk"
+             RequestedThemeVariant="Default">
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+    <!-- An empty app menu keeps only the standard macOS items (Hide, Quit) instead of "About Avalonia" -->
+    <NativeMenu.Menu>
+        <NativeMenu />
+    </NativeMenu.Menu>
+</Application>

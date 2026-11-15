@@ -32,6 +32,9 @@ public sealed class OrganizerTests : IDisposable
     [InlineData("backup.zip", "Arşivler")]
     [InlineData("setup.msi", "Kurulum Dosyaları")]
     [InlineData("clip.webm", "Video ve Ses")]
+    [InlineData("figures.numbers", "Tablolar")]
+    [InlineData("letter.pages", "Belgeler")]
+    [InlineData("Zoom.dmg", "Kurulum Dosyaları")]
     public void Moves_by_extension_into_category_and_month_folder(string name, string category)
     {
         var file = _box.CreateFile(_box.Downloads, name);
@@ -78,6 +81,12 @@ public sealed class OrganizerTests : IDisposable
         _box.CreateFile(_box.Desktop, "desktop.ini");
         _box.CreateFile(_box.Desktop, "~$report.docx");
         _box.CreateFile(_box.Downloads, "downloading.zip.crdownload");
+        // Mac shortcuts and Finder files, also found on USB sticks used on a Mac
+        _box.CreateFile(_box.Desktop, "Site.webloc");
+        _box.CreateFile(_box.Desktop, ".DS_Store");
+        _box.CreateFile(_box.Desktop, "._photo.jpg");
+        if (!OperatingSystem.IsWindows())
+            _box.CreateFile(_box.Desktop, "Icon\r"); // not a valid Windows file name
         var hidden = _box.CreateFile(_box.Desktop, "hidden.txt");
         File.SetAttributes(hidden, FileAttributes.Hidden);
         var subfolder = Path.Combine(_box.Desktop, "Project Folder");
@@ -161,7 +170,7 @@ public sealed class OrganizerTests : IDisposable
         _box.CreateFile(_box.Downloads, "contract.pdf", content: "DOWNLOADS");
         var rules = _box.DefaultRules();
         foreach (var s in rules.Sources)
-            s.Target = "{Documents}\\Archive";
+            s.Target = "{Documents}/Archive";
 
         var result = _box.CreateOrganizer(rules).Run();
 
@@ -241,16 +250,24 @@ public sealed class OrganizerTests : IDisposable
     }
 
     [Fact]
-    public void Junction_to_a_forbidden_folder_is_rejected()
+    public void Link_to_a_forbidden_folder_is_rejected()
     {
         var target = Path.Combine(Path.GetTempPath(), "TidyDeskLinkTarget", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(target);
         var link = Path.Combine(_box.Root, "Linked");
         try
         {
-            using (var p = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd", $"/c mklink /J \"{link}\" \"{target}\"") { CreateNoWindow = true })!)
+            if (OperatingSystem.IsWindows())
+            {
+                // A junction needs no admin rights (a symbolic link does on Windows).
+                using var p = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd", $"/c mklink /J \"{link}\" \"{target}\"") { CreateNoWindow = true })!;
                 p.WaitForExit();
-            Assert.True(Directory.Exists(link), "mklink failed");
+            }
+            else
+            {
+                Directory.CreateSymbolicLink(link, target);
+            }
+            Assert.True(Directory.Exists(link), "creating the link failed");
 
             // The link sits inside the sandbox "profile", but its target does not.
             Assert.NotNull(_box.Guard.Check(link));
@@ -267,7 +284,7 @@ public sealed class OrganizerTests : IDisposable
     public void Same_folder_listed_twice_is_scanned_once()
     {
         var rules = _box.DefaultRules();
-        rules.Sources.Add(new SourceFolderRule { Folder = "{Desktop}", Target = "{Documents}\\Other" });
+        rules.Sources.Add(new SourceFolderRule { Folder = "{Desktop}", Target = "{Documents}/Other" });
         _box.CreateFile(_box.Desktop, "single.pdf");
 
         var plan = _box.CreateOrganizer(rules).CreatePlan();
@@ -281,8 +298,8 @@ public sealed class OrganizerTests : IDisposable
         var rules = _box.DefaultRules();
         rules.Sources =
         [
-            new SourceFolderRule { Folder = Path.Combine(_box.Root, "missing"), Target = "{Documents}\\X" },
-            new SourceFolderRule { Folder = "{Desk}", Target = "{Documents}\\X" },
+            new SourceFolderRule { Folder = Path.Combine(_box.Root, "missing"), Target = "{Documents}/X" },
+            new SourceFolderRule { Folder = "{Desk}", Target = "{Documents}/X" },
         ];
 
         var plan = _box.CreateOrganizer(rules).CreatePlan();

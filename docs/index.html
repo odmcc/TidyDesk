@@ -6,7 +6,7 @@
 <title>TidyDesk</title>
 <meta name="description" content="TidyDesk Masaüstü, Belgeler ve İndirilenler klasörlerini tek tıkla türüne göre toplar. Ücretsiz, açık kaynak, hiçbir şeyi silmez, geri alınır.">
 <meta property="og:title" content="TidyDesk: Masaüstün tek tıkla toparlansın">
-<meta property="og:description" content="Windows için ücretsiz ve açık kaynak dosya toplayıcı. Hiçbir şeyi silmez, internete çıkmaz, her işlem geri alınır.">
+<meta property="og:description" content="Windows ve Mac için ücretsiz ve açık kaynak dosya toplayıcı. Hiçbir şeyi silmez, internete çıkmaz, her işlem geri alınır.">
 <meta property="og:image" content="https://odmcc.github.io/TidyDesk/social/cover.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -200,6 +200,7 @@ h3 { font-size: 1.375rem; letter-spacing: -.015em; line-height: 1.2; margin: 0 0
 .dl > div { border-top: 1px solid #2D3C5C; padding-top: 26px; }
 .dl p { color: #B6C2D9; max-width: 40ch; }
 .dl code { color: #fff; }
+.dl.mac { margin-top: 56px; }
 .warn { margin-top: 48px; max-width: 68ch; color: #B6C2D9; font-size: .9375rem; border-left: 3px solid #4C8BF5; padding-left: 18px; }
 
 footer { padding: 32px 0 44px; color: var(--ink-soft); font-size: .9375rem; }
@@ -249,10 +250,10 @@ footer nav { display: flex; gap: 22px; flex-wrap: wrap; }
       <h1 data-k="h1">Masaüstün tek tıkla toparlansın.</h1>
       <p class="lead" data-k="lead">TidyDesk; Masaüstü, Belgeler ve İndirilenler'deki dosyaları türüne göre klasörlere ayırır. Hiçbir şeyi silmez, hiçbir yere göndermez, yaptığı her işlemi geri alabilirsin.</p>
       <div class="cta">
-        <a class="btn" href="#indir" data-k="cta.dl">Windows için indir</a>
+        <a class="btn" href="#indir" data-k="cta.dl">Windows ve Mac için indir</a>
         <a class="btn quiet" href="https://github.com/odmcc/TidyDesk" data-k="cta.src">Kaynak kodu GitHub'da</a>
       </div>
-      <p class="fine" data-k="fine">Ücretsiz ve açık kaynak. Windows 10 ve 11, 64-bit.</p>
+      <p class="fine" data-k="fine">Ücretsiz ve açık kaynak. Windows 10 ve 11 (64-bit), macOS 14 ve sonrası.</p>
     </div>
 
     <div class="stage" id="stage" aria-label="Demo">
@@ -380,7 +381,20 @@ footer nav { display: flex; gap: 22px; flex-wrap: wrap; }
         <a class="btn on-dark" href="https://github.com/odmcc/TidyDesk/releases/latest/download/TidyDesk-Setup.exe" data-k="dl2.b">Kurulum dosyasını indir</a>
       </div>
     </div>
+    <div class="dl mac">
+      <div>
+        <h3 data-k="dl3.h">Mac (Apple Silicon)</h3>
+        <p data-k="dl3.t">M1, M2, M3, M4 ve sonrası. <code>.dmg</code> dosyasını aç, TidyDesk'i Uygulamalar klasörüne sürükle.</p>
+        <a class="btn on-dark" href="https://github.com/odmcc/TidyDesk/releases/latest/download/TidyDesk-mac-arm64.dmg" data-k="dl3.b">Apple Silicon için indir</a>
+      </div>
+      <div>
+        <h3 data-k="dl4.h">Mac (Intel)</h3>
+        <p data-k="dl4.t">Intel işlemcili Mac'ler. Hangisi olduğunu <b>Apple menüsü → Bu Mac Hakkında</b> penceresinde "Çip" ya da "İşlemci" satırı söyler.</p>
+        <a class="btn on-dark" href="https://github.com/odmcc/TidyDesk/releases/latest/download/TidyDesk-mac-x64.dmg" data-k="dl4.b">Intel Mac için indir</a>
+      </div>
+    </div>
     <p class="warn" data-k="dl.warn">Program henüz kod imzalı değil. Windows ilk açılışta "bilgisayarınızı korudu" uyarısı gösterebilir: <b>Ek bilgi</b>'ye, sonra <b>Yine de çalıştır</b>'a bas. Kaynak kodu açık; istersen kendin derleyebilirsin.</p>
+    <p class="warn" data-k="dl.mwarn">Mac sürümü Apple tarafından onaylanmadı (noter onayı yok). İlk açılışta macOS "doğrulanamadı" der: <b>Bitti</b>'ye bas, sonra <b>Sistem Ayarları → Gizlilik ve Güvenlik</b> sayfasının altındaki <b>Yine de Aç</b> düğmesine bas. Bunu bir kez yapman yeter. macOS, Masaüstü ve diğer klasörler için ayrıca izin sorar. Mac'te açık dosya denetimi Windows'taki kadar geniş değil: Office belgeleri tanınır, başka programlarda açık dosyalar her zaman tanınmaz. Her taşıma yine geri alınabilir.</p>
   </div>
 </section>
 
@@ -400,7 +414,7 @@ footer nav { display: flex; gap: 22px; flex-wrap: wrap; }
 const EN = {
   'nav.dl': 'Download', 'h1': 'Tidy your desktop in one click.',
   'lead': 'TidyDesk sorts the files in your Desktop, Documents and Downloads into folders by type. It deletes nothing, sends nothing anywhere, and every run can be undone.',
-  'cta.dl': 'Download for Windows', 'cta.src': 'Source code on GitHub', 'fine': 'Free and open source. Windows 10 and 11, 64-bit.',
+  'cta.dl': 'Download for Windows and Mac', 'cta.src': 'Source code on GitHub', 'fine': 'Free and open source. Windows 10 and 11 (64-bit), macOS 14 and later.',
   'p1.h': 'Nothing is deleted.', 'p1.t': 'Files are only moved. If a file with the same name exists, the new one becomes <code>report (2).pdf</code> instead of overwriting it.',
   'p2.h': 'Every run can be undone.', 'p2.t': 'Each move is written to a journal the moment it happens, so Undo works even if you close the app halfway.',
   'p3.h': 'It never goes online.', 'p3.t': 'The code has no networking: no telemetry, updates or uploads. To recognize a file type it reads only the first few bytes.',
@@ -420,6 +434,9 @@ const EN = {
   'dl1.h': 'Portable', 'dl1.t': '<code>TidyDesk.exe</code>: just double-click it. Runs from a USB stick and leaves no trace on the PC. To remove it, delete the file.', 'dl1.b': 'Download TidyDesk.exe',
   'dl2.h': 'Installer', 'dl2.t': '<code>TidyDesk-Setup.exe</code>: adds TidyDesk to the Start menu and to Installed apps. No administrator rights needed.', 'dl2.b': 'Download the installer',
   'dl.warn': 'The program is not code-signed yet. On first launch Windows may show "Windows protected your PC": press <b>More info</b>, then <b>Run anyway</b>. The source is open, so you can build it yourself.',
+  'dl3.h': 'Mac (Apple Silicon)', 'dl3.t': 'M1, M2, M3, M4 and later. Open the <code>.dmg</code> and drag TidyDesk into Applications.', 'dl3.b': 'Download for Apple Silicon',
+  'dl4.h': 'Mac (Intel)', 'dl4.t': 'Macs with an Intel processor. To check, open <b>Apple menu → About This Mac</b> and look at the "Chip" or "Processor" line.', 'dl4.b': 'Download for Intel Mac',
+  'dl.mwarn': 'The Mac version is not notarized by Apple. On first launch macOS says it can\'t verify the app: press <b>Done</b>, then press <b>Open Anyway</b> at the bottom of <b>System Settings → Privacy &amp; Security</b>. You only do this once. macOS also asks for permission to access the Desktop and other folders. On a Mac the open-file check is narrower than on Windows: Office documents are detected, files open in other programs are not always detected. Every move can still be undone.',
   'ft.l': 'MIT license. © odmcc', 'ft.src': 'Source code', 'ft.rel': 'Releases', 'ft.bug': 'Report an issue'
 };
 const T = {

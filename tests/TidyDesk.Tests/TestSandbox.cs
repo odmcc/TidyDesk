@@ -3,7 +3,7 @@ using TidyDesk.Core;
 namespace TidyDesk.Tests;
 
 /// <summary>
-/// Creates a temporary "Desktop", "Downloads" and "Documents" under %TEMP% for each test.
+/// Creates a temporary "Desktop", "Downloads" and "Documents" in the temp folder for each test.
 /// Tests never touch the user's real folders: {Desktop}/{Downloads} resolve to these temporary folders.
 /// </summary>
 public sealed class TestSandbox : IDisposable
@@ -50,8 +50,8 @@ public sealed class TestSandbox : IDisposable
         rules.MinAgeDays = 7;
         rules.Sources =
         [
-            new SourceFolderRule { Folder = "{Desktop}", Target = @"{Desktop}\Sorted" },
-            new SourceFolderRule { Folder = "{Downloads}", Target = @"{Downloads}\Sorted" },
+            new SourceFolderRule { Folder = "{Desktop}", Target = "{Desktop}/Sorted" },
+            new SourceFolderRule { Folder = "{Downloads}", Target = "{Downloads}/Sorted" },
         ];
         return rules;
     }

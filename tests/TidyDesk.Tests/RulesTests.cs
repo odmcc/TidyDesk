@@ -38,14 +38,14 @@ public sealed class RulesTests : IDisposable
     {
         Environment.SetEnvironmentVariable("DD_TEST_SUB", "Sub");
 
-        var path = PathTokens.Expand("{Desktop}\\%DD_TEST_SUB%\\Folder", _box.Resolve);
+        var path = PathTokens.Expand("{Desktop}/%DD_TEST_SUB%/Folder", _box.Resolve);
 
         Assert.Equal(Path.Combine(_box.Desktop, "Sub", "Folder"), path);
-        Assert.Throws<InvalidOperationException>(() => PathTokens.Expand("{Unknown}\\x", _box.Resolve));
-        Assert.Throws<InvalidOperationException>(() => PathTokens.Expand("relative\\path", _box.Resolve));
+        Assert.Throws<InvalidOperationException>(() => PathTokens.Expand("{Unknown}/x", _box.Resolve));
+        Assert.Throws<InvalidOperationException>(() => PathTokens.Expand("relative/path", _box.Resolve));
     }
 
-    [Theory]
+    [WindowsTheory]
     [InlineData("Desktop")]
     [InlineData("Downloads")]
     [InlineData("Documents")]

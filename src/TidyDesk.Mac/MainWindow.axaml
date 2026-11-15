@@ -1,0 +1,263 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TidyDesk.Mac"
+        x:Class="TidyDesk.Mac.MainWindow"
+        Title="TidyDesk" Width="720" Height="720" MinWidth="460" MinHeight="520"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <!-- Brand colors: match the logo and the Windows app, identical in light and dark mode -->
+        <SolidColorBrush x:Key="Brand" Color="#2B84EA" />
+        <SolidColorBrush x:Key="BrandSoft" Color="#262B84EA" />
+        <LinearGradientBrush x:Key="BrandGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#45A0F5" Offset="0" />
+            <GradientStop Color="#1D68D8" Offset="1" />
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="SuccessGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#4ADE9B" Offset="0" />
+            <GradientStop Color="#16A34A" Offset="1" />
+        </LinearGradientBrush>
+    </Window.Resources>
+
+    <Window.Styles>
+        <Style Selector="TextBlock.title">
+            <Setter Property="FontSize" Value="30" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.secondary">
+            <Setter Property="Opacity" Value="0.72" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+
+        <!-- Primary action: gradient pill -->
+        <Style Selector="Button.primary">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Background" Value="{StaticResource BrandGradient}" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Height" Value="54" />
+            <Setter Property="CornerRadius" Value="27" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BrandGradient}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Opacity" Value="0.9" />
+        </Style>
+        <Style Selector="Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BrandGradient}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <!-- Secondary action: outlined pill -->
+        <Style Selector="Button.ghost">
+            <Setter Property="Height" Value="44" />
+            <Setter Property="CornerRadius" Value="22" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <!-- Text-only button (undo link, language switch, remove) -->
+        <Style Selector="Button.link">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.lang">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="11,4" />
+            <Setter Property="CornerRadius" Value="11" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+        <Style Selector="Button.lang.selected">
+            <Setter Property="Background" Value="{StaticResource BrandGradient}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.lang.selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BrandGradient}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <!-- Folder card: brand-colored ring when selected; the card itself keeps its normal color -->
+        <Style Selector="ToggleButton.card">
+            <Setter Property="Width" Value="136" />
+            <Setter Property="Height" Value="148" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="ToggleButton.card:checked /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource ButtonBackground}" />
+            <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brand}" />
+        </Style>
+        <Style Selector="ToggleButton.card:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPointerOver}" />
+            <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPointerOver}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brand}" />
+        </Style>
+        <Style Selector="ToggleButton.card:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPressed}" />
+            <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPressed}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brand}" />
+        </Style>
+        <Style Selector="Button.add">
+            <Setter Property="Width" Value="136" />
+            <Setter Property="Height" Value="148" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="*,Auto">
+
+        <!-- ================= Main screen ================= -->
+        <!-- Viewbox: content scales down in small windows instead of showing a scrollbar -->
+        <Viewbox x:Name="HomeView" StretchDirection="DownOnly" Margin="0,0,0,4">
+            <StackPanel Margin="32,24" Width="620">
+                <Image Source="/Assets/logo.png" Width="68" Height="68" HorizontalAlignment="Center" Margin="0,24,0,20" />
+                <TextBlock x:Name="HomeTitle" Classes="title" />
+                <TextBlock x:Name="HomeSubtitle" Classes="secondary" FontSize="15" Margin="0,8,0,0" />
+
+                <ItemsControl x:Name="FolderTiles" Margin="0,30,0,0" HorizontalAlignment="Center">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel HorizontalAlignment="Center" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.DataTemplates>
+                        <DataTemplate DataType="local:FolderItem">
+                            <Panel Width="136" Height="148" Margin="6">
+                                <ToggleButton Classes="card" IsChecked="{Binding IsChecked}" IsEnabled="{Binding IsAllowed}"
+                                              Click="Folder_Toggled" ToolTip.Tip="{Binding Tooltip}" AutomationProperties.Name="{Binding Name}">
+                                    <StackPanel>
+                                        <Border Width="52" Height="52" CornerRadius="16" Background="{StaticResource BrandSoft}" HorizontalAlignment="Center">
+                                            <TextBlock Text="{Binding Glyph}" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" Margin="0,12,0,0"
+                                                   HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="116" />
+                                        <TextBlock Text="{Binding Badge}" FontSize="12" Margin="0,2,0,0" HorizontalAlignment="Center" Opacity="0.7" />
+                                    </StackPanel>
+                                </ToggleButton>
+                                <!-- Check badge on selected cards -->
+                                <Border Width="22" Height="22" CornerRadius="11" Background="{StaticResource BrandGradient}" IsHitTestVisible="False"
+                                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,10,0" IsVisible="{Binding IsChecked}">
+                                    <TextBlock Text="✓" Foreground="White" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <Button Classes="link" Width="24" Height="24" Padding="0" Margin="6,6,0,0"
+                                        HorizontalAlignment="Left" VerticalAlignment="Top" IsVisible="{Binding IsCustom}"
+                                        Tag="{Binding}" Click="RemoveFolder_Click"
+                                        ToolTip.Tip="{Binding RemoveTip}" AutomationProperties.Name="{Binding RemoveTip}">
+                                    <TextBlock Text="✕" FontSize="10" Opacity="0.6" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Button>
+                            </Panel>
+                        </DataTemplate>
+                        <DataTemplate DataType="local:AddFolderTile">
+                            <Button Classes="add" Margin="6" Click="AddFolder_Click" ToolTip.Tip="{Binding Tip}" AutomationProperties.Name="{Binding Tip}">
+                                <StackPanel>
+                                    <Border Width="52" Height="52" CornerRadius="16" Background="{DynamicResource ButtonBackground}" HorizontalAlignment="Center">
+                                        <TextBlock Text="+" FontSize="26" Opacity="0.7" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Text="{Binding Label}" FontSize="14" Margin="0,12,0,0" HorizontalAlignment="Center" Opacity="0.72" />
+                                    <TextBlock Text=" " FontSize="12" Margin="0,2,0,0" />
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.DataTemplates>
+                </ItemsControl>
+                <TextBlock x:Name="FolderError" Classes="secondary" Margin="0,10,0,0" IsVisible="False" Foreground="#D13438" />
+
+                <Button x:Name="OrganizeButton" Classes="primary" Width="340" Margin="0,34,0,0" Click="Organize_Click">
+                    <TextBlock x:Name="OrganizeText" />
+                </Button>
+                <ProgressBar x:Name="BusyBar" IsIndeterminate="True" Width="200" Height="3" MinHeight="3" Margin="0,12,0,0"
+                             HorizontalAlignment="Center" Opacity="0" />
+                <TextBlock x:Name="HomeHint" FontSize="12" Margin="0,2,0,0" HorizontalAlignment="Center" Opacity="0.55" />
+                <TextBlock x:Name="HomeMessage" Classes="secondary" FontSize="13" Margin="0,16,0,0" IsVisible="False" />
+                <Button x:Name="UndoLastLink" Classes="link" HorizontalAlignment="Center" Margin="0,8,0,0" FontSize="12"
+                        IsVisible="False" Click="UndoLast_Click">
+                    <TextBlock x:Name="UndoLastText" Opacity="0.72" TextDecorations="Underline" />
+                </Button>
+            </StackPanel>
+        </Viewbox>
+
+        <!-- ================= Done screen ================= -->
+        <Viewbox x:Name="DoneView" StretchDirection="DownOnly" Margin="0,0,0,4" IsVisible="False">
+            <StackPanel Margin="32,24" Width="560">
+                <Panel x:Name="CheckGroup" Width="116" Height="116" Margin="0,40,0,24" HorizontalAlignment="Center">
+                    <Panel.RenderTransform>
+                        <ScaleTransform />
+                    </Panel.RenderTransform>
+                    <Ellipse Fill="{StaticResource SuccessGradient}" />
+                    <Path Stroke="White" StrokeThickness="9" StrokeLineCap="Round" StrokeJoin="Round"
+                          Data="M 36,60 L 52,76 L 82,44" />
+                </Panel>
+
+                <TextBlock x:Name="DoneTitle" Classes="title" />
+                <TextBlock x:Name="DoneSubtitle" Classes="secondary" FontSize="15" Margin="0,8,0,0" />
+
+                <ItemsControl x:Name="DoneChips" Margin="0,22,0,0" HorizontalAlignment="Center">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel HorizontalAlignment="Center" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="local:ChipItem">
+                            <Border Background="{Binding Tint}" CornerRadius="15" Padding="12,6" Margin="4">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Glyph}" FontSize="13" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Text}" Margin="7,0,0,0" Foreground="{Binding Accent}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock x:Name="DoneNote" Classes="secondary" FontSize="12" Margin="0,10,0,0" IsVisible="False" />
+
+                <Button Classes="primary" Width="340" Margin="0,32,0,0" Click="OpenTargets_Click">
+                    <TextBlock x:Name="OpenText" />
+                </Button>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
+                    <Button x:Name="UndoButton" Classes="ghost" Width="164" Margin="0,0,12,0" Click="Undo_Click">
+                        <TextBlock x:Name="UndoText" />
+                    </Button>
+                    <Button Classes="ghost" Width="164" Click="Back_Click">
+                        <TextBlock x:Name="OkText" />
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+        </Viewbox>
+
+        <!-- ================= Footer ================= -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="20,0,16,14">
+            <TextBlock x:Name="Footer" FontSize="12" Opacity="0.5" VerticalAlignment="Center" />
+            <StackPanel x:Name="LangSwitch" Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                <Button x:Name="LangTr" Classes="lang" Tag="tr" Content="TR" Click="Language_Click" />
+                <Button x:Name="LangEn" Classes="lang" Tag="en" Content="EN" Click="Language_Click" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

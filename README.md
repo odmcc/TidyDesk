@@ -4,7 +4,7 @@
 
 <h1 align="center">TidyDesk</h1>
 
-<p align="center"><b>A free, portable Windows app that tidies up your Desktop, Downloads and Documents in one click.</b></p>
+<p align="center"><b>A free app for Windows and Mac that tidies up your Desktop, Downloads and Documents in one click.</b></p>
 
 It looks at the files in the folders you pick, figures out what each one is, and sorts them into folders like `PDF`, `Documents`, `Spreadsheets` and `Images`. Nothing is deleted, nothing is uploaded, and every run can be undone with one click.
 
@@ -21,6 +21,8 @@ Get one of these from the [Releases](../../releases) page. .NET does not need to
 
 - **`TidyDesk.exe`** (portable): just run it, from any folder or a USB stick. Leaves no trace outside its own folder.
 - **`TidyDesk-Setup.exe`** (installer): adds TidyDesk to the Start menu and to *Installed apps*, so it can be removed the usual way. Installs for your user only, no administrator rights needed.
+
+**Mac:** **`TidyDesk-mac-arm64.dmg`** for Apple Silicon (M1 and later) or **`TidyDesk-mac-x64.dmg`** for Intel Macs. Open the `.dmg` and drag TidyDesk into Applications. See [macOS](#macos) below for the first launch.
 
 Windows may show a SmartScreen warning the first time ("Windows protected your PC") because the exe is not code-signed yet (see [docs/SIGNING.md](docs/SIGNING.md)). Click **More info → Run anyway**, or build it yourself from source (see below).
 
@@ -70,9 +72,20 @@ The points below describe `TidyDesk.exe`. The installer only adds the Start menu
 - Settings, undo history and logs are stored in a `TidyDesk-Data` folder next to the exe. If that location is read-only, `%LOCALAPPDATA%\TidyDesk` is used instead.
 - To remove it, delete the exe and the `TidyDesk-Data` folder.
 
+## macOS
+
+The Mac app works the same way, with the same rules and the same undo. Differences:
+
+- **First launch:** the app is not notarized by Apple (that needs a paid Apple Developer account). macOS says it can't verify the app: press **Done**, open **System Settings → Privacy & Security**, and press **Open Anyway** near the bottom. You only do this once.
+- **Folder access:** macOS asks once for each of Desktop, Documents, Downloads and USB drives. If you said no, allow TidyDesk in **System Settings → Privacy & Security → Files and Folders** and reopen the app.
+- **Allowed folders:** folders inside your home folder, and external disks and USB sticks under `/Volumes` (whole or by folder). Your home folder itself, `~/Library`, the Trash, system folders (`/System`, `/Library`, `/Applications`…), other users' folders and network volumes are refused. Links are followed to their real target before checking.
+- **Left alone:** `.DS_Store`, `._*` files, `.localized`, folder icons and web shortcuts (`.webloc`). Pages and Numbers files are sorted into Documents and Spreadsheets; `.dmg` and `.pkg` go to Installers.
+- **Open files:** macOS doesn't lock open files the way Windows does. Office documents are still detected through their `~$` lock files, but a file open in another program may be moved. It can be put back with Undo.
+- **Data:** settings, undo history and logs are in `~/Library/Application Support/TidyDesk`. To remove the app, drag it to the Trash and delete that folder.
+
 ## Requirements
 
-Windows 10 or 11, 64-bit.
+Windows 10 or 11, 64-bit. macOS 14 or later (Apple Silicon or Intel).
 
 ## Build from source
 
@@ -86,14 +99,17 @@ powershell -ExecutionPolicy Bypass -File scripts\publish.ps1 # build dist\TidyDe
 
 **Try it safely:** `TidyDesk.exe --demo C:\Temp\Test` runs the app against the `Desktop`, `Documents` and `Downloads` subfolders of `C:\Temp\Test` instead of your real folders.
 
+**Mac app:** `dotnet run --project src/TidyDesk.Mac -- --demo /tmp/TidyDeskTest` (the `--demo` option works the same; the Avalonia app also runs on Windows, which helps when trying out the UI). `bash scripts/package-mac.sh 3.2.0 arm64` builds `TidyDesk.app` and `dist/TidyDesk-mac-arm64.dmg`; it needs a Mac. The release workflow builds both Mac disk images on a macOS runner.
+
 ### Project layout
 
 | Path | Contents |
 |---|---|
 | `src/TidyDesk.Core` | Scanning, content-based type detection, folder protection (`PathGuard`), moving and undo. No UI code. |
+| `src/TidyDesk.Mac` | Avalonia user interface for macOS. Shares the core and `Strings.cs` with the Windows app. |
 | `src/TidyDesk` | WPF user interface (Windows 11 Fluent theme, light and dark mode, respects the Windows animation setting). All UI texts are in `Strings.cs`. |
-| `tests/TidyDesk.Tests` | xUnit tests. Each test uses a temporary folder and never touches real user files. |
-| `config/rules.default.json` | Category and exclusion rules, embedded into the exe |
+| `tests/TidyDesk.Tests` | xUnit tests, run on Windows and macOS. Each test uses a temporary folder and never touches real user files. |
+| `config/rules.default.json` | Category and exclusion rules (Windows and Mac), embedded into the app |
 
 ## Contributing
 

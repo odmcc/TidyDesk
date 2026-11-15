@@ -1,4 +1,6 @@
+#if WINDOWS
 using System.Windows;
+#endif
 
 namespace TidyDesk;
 
@@ -6,6 +8,7 @@ namespace TidyDesk;
 /// UI texts (Turkish by default, English optional). XAML texts are bound with {DynamicResource s.*};
 /// when the language changes, <see cref="Apply"/> updates the window resources and the screen refreshes instantly.
 /// To add a language, add a column to the table and a button next to TR | EN.
+/// The Mac app (src/TidyDesk.Mac) compiles this same file; only <see cref="Apply"/> is WPF-specific.
 /// </summary>
 internal static class Strings
 {
@@ -64,6 +67,11 @@ internal static class Strings
         ["done.ok"] = ("Tamam", "Done"),
         ["and"] = ("ve", "and"),
 
+        // Mac app
+        ["mac.showInFinder"] = ("Finder'da göster", "Show in Finder"),
+        ["mac.permission"] = ("macOS bu klasörü okumaya izin vermedi. Sistem Ayarları → Gizlilik ve Güvenlik → Dosyalar ve Klasörler bölümünden TidyDesk'e izin verin, sonra uygulamayı yeniden açın.",
+                              "macOS didn't allow reading this folder. Allow TidyDesk in System Settings → Privacy & Security → Files and Folders, then reopen the app."),
+
         // English singular forms (used when the count is 1); Turkish nouns stay singular after numbers
         ["badge.files.one"] = ("{0} dosya", "{0} file"),
         ["btn.organize.one"] = ("{0} dosyayı düzenle", "Tidy up {0} file"),
@@ -81,6 +89,10 @@ internal static class Strings
     [
         ("Choose a valid folder.", "Geçerli bir klasör seçin."),
         ("Network folders can't be used; choose a folder on this PC.", "Ağ klasörleri düzenlenemez; bilgisayarınızdaki bir klasörü seçin."),
+        ("Network folders can't be used; choose a folder on this Mac.", "Ağ klasörleri düzenlenemez; bu Mac'teki bir klasörü seçin."),
+        ("This folder is a link to a folder that can't be used.", "Bu klasör, düzenlenemeyen bir klasöre giden bir bağlantı."),
+        ("On the startup disk, only folders inside your own user folder can be used.",
+         "Başlangıç diskinde yalnızca kendi kullanıcı klasörünüzdeki klasörler düzenlenebilir."),
         ("A whole drive can't be used; choose a folder inside it.", "Sürücünün kendisi seçilemez; içindeki bir klasörü seçin."),
         ("System and program folders can't be used.", "Sistem ve program klasörleri düzenlenemez."),
         ("System folders can't be used.", "Sistem klasörleri düzenlenemez."),
@@ -116,11 +128,15 @@ internal static class Strings
     public static string JoinList(IReadOnlyList<string> names) =>
         names.Count <= 1 ? string.Concat(names) : string.Join(", ", names.Take(names.Count - 1)) + $" {T("and")} " + names[^1];
 
+    public static void SetLanguage(string language) => Language = language == "en" ? "en" : "tr";
+
+#if WINDOWS
     /// <summary>Switches the language and updates the {DynamicResource s.*} texts in XAML.</summary>
     public static void Apply(FrameworkElement root, string language)
     {
-        Language = language == "en" ? "en" : "tr";
+        SetLanguage(language);
         foreach (var key in Table.Keys.Where(k => !k.EndsWith(".one")))
             root.Resources[key] = T(key);
     }
+#endif
 }

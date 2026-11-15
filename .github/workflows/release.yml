@@ -1,6 +1,6 @@
 name: Release
 
-# Push a tag like v3.1.0 to build TidyDesk.exe and publish it as a GitHub Release.
+# Push a tag like v3.1.0 to build TidyDesk.exe, the installer and the Mac .dmg files, and publish them as a GitHub Release.
 # Code signing is optional: it runs only when the SignPath settings below exist (see docs/SIGNING.md).
 on:
   push:
@@ -11,8 +11,28 @@ permissions:
   actions: read # SignPath reads the build artifact
 
 jobs:
+  # TidyDesk-mac-arm64.dmg (Apple Silicon) and TidyDesk-mac-x64.dmg (Intel); not notarized, see README.
+  mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet test tests/TidyDesk.Tests --nologo
+      - name: Build the Mac apps (version from the tag)
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          bash scripts/package-mac.sh "$version" arm64
+          bash scripts/package-mac.sh "$version" x64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TidyDesk-mac
+          path: dist/TidyDesk-mac-*.dmg
+
   release:
     runs-on: windows-latest
+    needs: mac
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -52,8 +72,13 @@ jobs:
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$version" installer\TidyDesk.iss
           if ($LASTEXITCODE -ne 0) { throw "Installer build failed." }
 
+      - uses: actions/download-artifact@v4
+        with:
+          name: TidyDesk-mac
+          path: dist
+
       - name: Create release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ github.ref_name }}" dist\TidyDesk.exe dist\TidyDesk-Setup.exe --title "TidyDesk ${{ github.ref_name }}" --generate-notes
+        run: gh release create "${{ github.ref_name }}" dist\TidyDesk.exe dist\TidyDesk-Setup.exe dist\TidyDesk-mac-arm64.dmg dist\TidyDesk-mac-x64.dmg --title "TidyDesk ${{ github.ref_name }}" --generate-notes

@@ -5,6 +5,8 @@ namespace TidyDesk.Core;
 /// network paths, the Recycle Bin and other users' profiles are never touched.
 /// On the system drive (C:) only folders inside the signed-in user's profile are allowed; other local disks
 /// and USB sticks can be used whole (D:\, E:\) or by folder.
+/// On macOS: only folders inside the user's home (not ~/Library) and external disks under /Volumes;
+/// system folders, the Trash and network volumes are rejected, and links are resolved to their real target first.
 /// </summary>
 public sealed class PathGuard
 {
@@ -12,6 +14,7 @@ public sealed class PathGuard
     private readonly string _systemDrive;
     private readonly List<string> _blocked;
     private readonly List<string> _networkRoots;
+    private readonly string _unixHomeReal = "";
 
     /// <param name="userProfile">For tests; defaults to the signed-in user's profile.</param>
     /// <param name="blockedRoots">For tests; defaults to the Windows, Program Files, ProgramData and AppData folders.</param>
@@ -31,6 +34,8 @@ public sealed class PathGuard
             .Where(p => p.StartsWith(@"\\", StringComparison.Ordinal))
             .Select(Normalize)
             .ToList();
+        if (!OperatingSystem.IsWindows())
+            _unixHomeReal = RealPath(_userProfile);
     }
 
     private static IEnumerable<string> DefaultBlockedRoots(string profile) =>
@@ -59,6 +64,8 @@ public sealed class PathGuard
         {
             return "Choose a valid folder.";
         }
+        if (!OperatingSystem.IsWindows())
+            return CheckUnix(full);
 
         if (full.StartsWith(@"\\", StringComparison.Ordinal) && !_networkRoots.Any(r => IsSameOrInside(full, r)))
             return "Network folders can't be used; choose a folder on this PC.";
@@ -90,6 +97,121 @@ public sealed class PathGuard
         if (!isRoot && Directory.ResolveLinkTarget(full, returnFinalTarget: true) is { } target)
             return Check(target.FullName) is null ? null : "This folder is a link to a folder that can't be used.";
         return null;
+    }
+
+    private string? CheckUnix(string full)
+    {
+        string real;
+        try
+        {
+            real = RealPath(full);
+        }
+        catch (IOException)
+        {
+            return "Choose a valid folder.";
+        }
+
+        if (CheckMacRules(real, _unixHomeReal) is { } denied)
+            // Allowed by name but not by where it really leads: say it's a link.
+            return real != full && CheckMacRules(full, _userProfile) is null ? "This folder is a link to a folder that can't be used." : denied;
+        if (_blocked.Any(b => IsSameOrInside(real, b)))
+            return "System and program folders can't be used.";
+        if (IsNetworkVolume(real))
+            return "Network folders can't be used; choose a folder on this Mac.";
+        return Directory.Exists(real) ? null : "Folder not found.";
+    }
+
+    private static readonly HashSet<string> MacSystemNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".Trash", ".Trashes", ".Spotlight-V100", ".fseventsd", ".DocumentRevisions-V100", ".TemporaryItems",
+        "$Recycle.Bin", "System Volume Information", // a USB stick that was used on Windows
+    };
+
+    private static readonly HashSet<string> MacSystemRoots = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "System", "Library", "Applications", "usr", "bin", "sbin", "private", "opt", "etc", "var", "tmp", "cores", "dev", "Network",
+    };
+
+    private static readonly HashSet<string> NetworkFormats = new(StringComparer.OrdinalIgnoreCase) { "smbfs", "afpfs", "nfs", "webdav", "cifs", "ftp" };
+
+    /// <summary>macOS rules on a real (link-free) absolute path like "/Users/me/Desktop". Pure string logic, testable anywhere.</summary>
+    internal static string? CheckMacRules(string path, string home)
+    {
+        if (path == "/")
+            return "A whole drive can't be used; choose a folder inside it.";
+        var parts = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Any(MacSystemNames.Contains))
+            return "System folders can't be used.";
+        if (IsInsideUnix(path, home + "/Library"))
+            return "System and program folders can't be used.";
+        if (IsInsideUnix(path, home))
+            return path.Equals(home, StringComparison.OrdinalIgnoreCase)
+                ? "Your whole user folder can't be used; choose a folder inside it, like Desktop or Documents."
+                : null;
+        // External disks and USB sticks are mounted at /Volumes/<name>; whole or by folder is fine.
+        if (parts[0].Equals("Volumes", StringComparison.OrdinalIgnoreCase))
+            return parts.Length == 1 ? "System folders can't be used." : null;
+        if (MacSystemRoots.Contains(parts[0]))
+            return "System and program folders can't be used.";
+        return "On the startup disk, only folders inside your own user folder can be used.";
+    }
+
+    private static bool IsInsideUnix(string path, string parent) =>
+        path.Equals(parent, StringComparison.OrdinalIgnoreCase)
+        || path.StartsWith(parent.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Resolves every symbolic link in the path (like realpath), so "/var" becomes "/private/var". Unix only.</summary>
+    internal static string RealPath(string path)
+    {
+        var remaining = new List<string>(path.Split('/', StringSplitOptions.RemoveEmptyEntries));
+        var current = "/";
+        var hops = 0;
+        while (remaining.Count > 0)
+        {
+            var name = remaining[0];
+            remaining.RemoveAt(0);
+            if (name == ".")
+                continue;
+            if (name == "..")
+            {
+                current = Path.GetDirectoryName(current) ?? "/";
+                continue;
+            }
+            var next = Path.Combine(current, name);
+            string? target = null;
+            try
+            {
+                target = new FileInfo(next).LinkTarget;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Unreadable: treat it as a plain folder; the rules still apply to its name.
+            }
+            if (target is null)
+            {
+                current = next;
+                continue;
+            }
+            if (++hops > 40)
+                throw new IOException("Too many levels of symbolic links.");
+            if (target.StartsWith('/'))
+                current = "/";
+            remaining.InsertRange(0, target.Split('/', StringSplitOptions.RemoveEmptyEntries));
+        }
+        return current;
+    }
+
+    private static bool IsNetworkVolume(string path)
+    {
+        try
+        {
+            var mount = DriveInfo.GetDrives().Where(d => IsInsideUnix(path, d.Name)).MaxBy(d => d.Name.Length);
+            return mount is not null && (mount.DriveType == DriveType.Network || NetworkFormats.Contains(mount.DriveFormat));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
     }
 
     private static bool IsSameOrInside(string path, string parent) =>

@@ -3,11 +3,12 @@ using TidyDesk.Core;
 
 namespace TidyDesk.Tests;
 
+// Windows rules use real drive letters and folders, so they only run on Windows; macOS rules are below.
 public sealed class PathGuardTests
 {
     private readonly PathGuard _guard = new();
 
-    [Theory]
+    [WindowsTheory]
     [InlineData(@"C:\")]
     [InlineData(@"C:\Windows")]
     [InlineData(@"C:\Windows\System32")]
@@ -25,7 +26,7 @@ public sealed class PathGuardTests
         Assert.NotNull(_guard.Check(path));
     }
 
-    [Fact]
+    [WindowsFact]
     public void User_profile_and_appdata_are_rejected()
     {
         var profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -36,7 +37,7 @@ public sealed class PathGuardTests
         Assert.NotNull(_guard.Check(Path.GetTempPath())); // %TEMP% lives under AppData
     }
 
-    [Theory]
+    [WindowsTheory]
     [InlineData("Desktop")]
     [InlineData("Documents")]
     [InlineData("Downloads")]
@@ -46,7 +47,7 @@ public sealed class PathGuardTests
         Assert.Null(_guard.Check(KnownFolders.Resolve(token)!));
     }
 
-    [Fact]
+    [WindowsFact]
     public void Lookalike_paths_outside_the_profile_are_rejected()
     {
         var profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -56,7 +57,7 @@ public sealed class PathGuardTests
         Assert.NotNull(_guard.Check(Path.Combine(profile, "Desktop", "..", "AppData", "Roaming")));
     }
 
-    [Fact]
+    [WindowsFact]
     public void Whole_non_system_drive_is_allowed()
     {
         // A subst drive stands in for a second disk or a USB stick (it reports as a fixed drive).
@@ -80,6 +81,70 @@ public sealed class PathGuardTests
         using var p = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("subst", args) { CreateNoWindow = true })!;
         p.WaitForExit();
         Assert.Equal(0, p.ExitCode);
+    }
+}
+
+public sealed class MacPathRulesTests
+{
+    private const string Home = "/Users/alex";
+
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/System")]
+    [InlineData("/System/Library")]
+    [InlineData("/Library")]
+    [InlineData("/Applications")]
+    [InlineData("/usr/local")]
+    [InlineData("/private/var")]
+    [InlineData("/tmp")]
+    [InlineData("/Volumes")]
+    [InlineData("/Users")]
+    [InlineData("/Users/Shared")]
+    [InlineData("/Users/sam/Desktop")]
+    [InlineData("/Users/alex2/Desktop")]
+    [InlineData(Home)]
+    [InlineData(Home + "/Library")]
+    [InlineData(Home + "/Library/Mobile Documents")]
+    [InlineData(Home + "/.Trash")]
+    [InlineData("/Volumes/USB/.Trashes")]
+    [InlineData("/Volumes/USB/.Spotlight-V100")]
+    [InlineData("/Volumes/USB/$RECYCLE.BIN")]
+    public void System_and_disallowed_paths_are_rejected(string path)
+    {
+        Assert.NotNull(PathGuard.CheckMacRules(path, Home));
+    }
+
+    [Theory]
+    [InlineData(Home + "/Desktop")]
+    [InlineData(Home + "/Documents")]
+    [InlineData(Home + "/Downloads")]
+    [InlineData(Home + "/Desktop/Projects")]
+    [InlineData("/Volumes/USB")]
+    [InlineData("/Volumes/Backup Disk/Photos")]
+    public void Home_folders_and_external_disks_are_allowed(string path)
+    {
+        Assert.Null(PathGuard.CheckMacRules(path, Home));
+    }
+
+    [Fact]
+    public void Messages_explain_why()
+    {
+        Assert.Equal("Your whole user folder can't be used; choose a folder inside it, like Desktop or Documents.", PathGuard.CheckMacRules(Home, Home));
+        Assert.Equal("On the startup disk, only folders inside your own user folder can be used.", PathGuard.CheckMacRules("/Users/sam", Home));
+        Assert.Equal("A whole drive can't be used; choose a folder inside it.", PathGuard.CheckMacRules("/", Home));
+    }
+
+    [Fact]
+    public void Real_guard_follows_links_on_unix()
+    {
+        if (OperatingSystem.IsWindows())
+            return; // covered by Link_to_a_forbidden_folder_is_rejected with a junction
+        using var box = new TestSandbox();
+        var link = Path.Combine(box.Desktop, "etc-link");
+        Directory.CreateSymbolicLink(link, "/etc");
+
+        Assert.Equal("This folder is a link to a folder that can't be used.", box.Guard.Check(link));
+        Assert.Null(box.Guard.Check(box.Desktop)); // the temp folder itself sits behind /var -> /private/var
     }
 }
 
