@@ -18,6 +18,8 @@ public static class KnownFolders
 
     public static string? GetPath(Guid folderId)
     {
+        if (!OperatingSystem.IsWindows())
+            return null;
         var hr = SHGetKnownFolderPath(folderId, 0, IntPtr.Zero, out var ptr);
         try
         {
@@ -30,7 +32,23 @@ public static class KnownFolders
     }
 
     /// <summary>Resolves the {Desktop}, {Downloads}, {Documents} and {UserProfile} tokens.</summary>
-    public static string? Resolve(string token) => token.ToLowerInvariant() switch
+    public static string? Resolve(string token) => OperatingSystem.IsWindows() ? ResolveWindows(token) : ResolveUnix(token);
+
+    // macOS has fixed ~/Desktop, ~/Documents, ~/Downloads (iCloud "Desktop & Documents" keeps these paths).
+    private static string? ResolveUnix(string token)
+    {
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        return token.ToLowerInvariant() switch
+        {
+            "desktop" => Path.Combine(home, "Desktop"),
+            "downloads" => Path.Combine(home, "Downloads"),
+            "documents" => Path.Combine(home, "Documents"),
+            "userprofile" => home,
+            _ => null,
+        };
+    }
+
+    private static string? ResolveWindows(string token) => token.ToLowerInvariant() switch
     {
         "desktop" => GetPath(Desktop) ?? Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
         "downloads" => GetPath(Downloads) ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"),

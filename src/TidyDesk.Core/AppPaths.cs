@@ -4,6 +4,8 @@ namespace TidyDesk.Core;
 /// The app's own files (settings, undo history, logs). The app is portable:
 /// data is kept in a "TidyDesk-Data" folder next to the exe. If that location isn't writable
 /// (e.g. a read-only share), %LOCALAPPDATA%\TidyDesk is used. Nothing is written to the registry.
+/// On macOS the exe sits inside the .app bundle, which must not be written to, so data always goes to
+/// ~/Library/Application Support/TidyDesk (.NET maps LocalApplicationData there on macOS).
 /// </summary>
 public sealed class AppPaths
 {
@@ -19,7 +21,7 @@ public sealed class AppPaths
     {
         var exeDir = AppContext.BaseDirectory;
         var beside = Path.Combine(exeDir, AppName + "-Data");
-        if (CanWrite(beside))
+        if (!OperatingSystem.IsMacOS() && CanWrite(beside))
             return new AppPaths { DataDir = beside };
         return new AppPaths { DataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppName) };
     }
