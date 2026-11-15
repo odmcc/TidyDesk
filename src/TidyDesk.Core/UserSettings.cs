@@ -9,6 +9,10 @@ public sealed class UserSettings
     public List<string>? Folders { get; set; }
     /// <summary>Folders the user added with "Add folder" (they stay in the list even when unselected).</summary>
     public List<string> CustomFolders { get; set; } = [];
+    /// <summary>Folders whose subfolders are organized too, each in its own place. Only for folders added with "Add folder".</summary>
+    public List<string> Subfolders { get; set; } = [];
+    /// <summary>Only move files older than this many days (0: all files).</summary>
+    public int MinAgeDays { get; set; }
     /// <summary>Interface language: "tr" (default) or "en".</summary>
     public string Language { get; set; } = "tr";
 

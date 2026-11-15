@@ -229,7 +229,7 @@
 
         <!-- Folder card content -->
         <DataTemplate DataType="{x:Type local:FolderItem}">
-            <Grid Width="136" Height="148" Margin="6">
+            <Grid Width="136" Height="164" Margin="6">
                 <ToggleButton Style="{StaticResource FolderCard}" IsChecked="{Binding IsChecked}" IsEnabled="{Binding IsAllowed}"
                               Click="Folder_Toggled" ToolTip="{Binding Tooltip}" AutomationProperties.Name="{Binding Name}">
                     <StackPanel>
@@ -242,6 +242,12 @@
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
                 </ToggleButton>
+                <CheckBox HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,8" MinWidth="0" FontSize="11"
+                          IsChecked="{Binding IncludeSubfolders}" IsEnabled="{Binding IsAllowed}" Click="Subfolders_Toggled"
+                          Content="{DynamicResource card.subfolders}" ToolTip="{DynamicResource card.subfoldersTip}"
+                          AutomationProperties.HelpText="{DynamicResource card.subfoldersTip}"
+                          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                          Visibility="{Binding IsCustom, Converter={StaticResource BoolToVis}}" />
                 <Button HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8,8,0,0" Width="22" Height="22" Padding="0"
                         Background="Transparent" BorderThickness="0" Tag="{Binding}" Click="RemoveFolder_Click" Cursor="Hand"
                         ToolTip="{DynamicResource s.removeFolder}" AutomationProperties.Name="{DynamicResource s.removeFolder}"
@@ -259,7 +265,7 @@
 
         <!-- "Add folder" card: dashed outline -->
         <DataTemplate DataType="{x:Type local:AddFolderTile}">
-            <Button Width="136" Height="148" Margin="6" Click="AddFolder_Click" Cursor="Hand"
+            <Button Width="136" Height="164" Margin="6" Click="AddFolder_Click" Cursor="Hand"
                     ToolTip="{DynamicResource s.addFolderTip}" AutomationProperties.Name="{DynamicResource s.addFolderTip}">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
@@ -330,8 +336,14 @@
                 <TextBlock x:Name="FolderError" Style="{StaticResource Secondary}" Margin="0,10,0,0" Visibility="Collapsed"
                            Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
 
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,0">
+                    <TextBlock Text="{DynamicResource age.label}" VerticalAlignment="Center" Margin="0,0,10,0"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <ComboBox x:Name="AgeBox" MinWidth="190" SelectionChanged="Age_Changed" AutomationProperties.Name="{DynamicResource age.label}" />
+                </StackPanel>
+
                 <Button x:Name="OrganizeButton" Style="{StaticResource PrimaryPill}" Width="340" HorizontalAlignment="Center"
-                        Margin="0,34,0,0" Click="Organize_Click">
+                        Margin="0,24,0,0" Click="Organize_Click">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock x:Name="OrganizeGlyph" Style="{StaticResource Glyph}" FontSize="17" Text="&#xE945;" />
                         <TextBlock x:Name="OrganizeText" Text="Scanning folders…" Margin="10,0,0,0" FontWeight="SemiBold" />
@@ -343,9 +355,19 @@
                            Text="{DynamicResource s.homeHint}" />
                 <TextBlock x:Name="HomeMessage" Style="{StaticResource Secondary}" FontSize="13" Margin="0,16,0,0" Visibility="Collapsed"
                            Foreground="{DynamicResource SystemFillColorSuccessBrush}" />
-                <TextBlock x:Name="UndoLastLink" HorizontalAlignment="Center" Margin="0,14,0,0" FontSize="12" Visibility="Collapsed">
-                    <Hyperlink Click="UndoLast_Click" Foreground="{DynamicResource TextFillColorSecondaryBrush}"><Run x:Name="UndoLastText" Text="Undo last cleanup" /></Hyperlink>
-                </TextBlock>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,14,0,0">
+                    <TextBlock x:Name="PreviewLink" FontSize="12">
+                        <Hyperlink Click="Preview_Click" Foreground="{DynamicResource TextFillColorSecondaryBrush}"><Run Text="{DynamicResource link.preview}" /></Hyperlink>
+                    </TextBlock>
+                    <TextBlock Text="  ·  " FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                    <TextBlock FontSize="12">
+                        <Hyperlink Click="History_Click" Foreground="{DynamicResource TextFillColorSecondaryBrush}"><Run Text="{DynamicResource link.history}" /></Hyperlink>
+                    </TextBlock>
+                    <TextBlock x:Name="UndoLastSeparator" Text="  ·  " FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Visibility="Collapsed" />
+                    <TextBlock x:Name="UndoLastLink" FontSize="12" Visibility="Collapsed">
+                        <Hyperlink Click="UndoLast_Click" Foreground="{DynamicResource TextFillColorSecondaryBrush}"><Run x:Name="UndoLastText" Text="Undo last cleanup" /></Hyperlink>
+                    </TextBlock>
+                </StackPanel>
             </StackPanel>
         </Viewbox>
 
@@ -421,6 +443,98 @@
             </StackPanel>
         </Viewbox>
 
+        <!-- ================= Preview screen: what will move where ================= -->
+        <Grid x:Name="PreviewView" Margin="40,56,40,8" MaxWidth="720" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <StackPanel>
+                <TextBlock x:Name="PreviewTitle" Style="{StaticResource Title}" FontSize="26" />
+                <TextBlock Style="{StaticResource Secondary}" FontSize="14" Margin="0,6,0,0" Text="{DynamicResource preview.subtitle}" />
+            </StackPanel>
+            <Border Grid.Row="1" Margin="0,18,0,0" CornerRadius="12" Padding="4"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                <ItemsControl x:Name="PreviewList" Focusable="False" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel">
+                    <ItemsControl.Template>
+                        <ControlTemplate TargetType="ItemsControl">
+                            <ScrollViewer CanContentScroll="True" Focusable="False" Padding="14,8">
+                                <ItemsPresenter />
+                            </ScrollViewer>
+                        </ControlTemplate>
+                    </ItemsControl.Template>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type local:PreviewItem}">
+                            <Grid Margin="0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="30" Height="30" CornerRadius="9" Background="{Binding Tint}" VerticalAlignment="Center">
+                                    <TextBlock Style="{StaticResource Glyph}" FontSize="14" Text="{Binding Glyph}" Foreground="{Binding Accent}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Detail}" FontSize="12" TextTrimming="CharacterEllipsis"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,8">
+                <Button Style="{StaticResource GhostPill}" Width="140" Content="{DynamicResource preview.back}" Click="Back_Click" />
+                <Button x:Name="PreviewOrganize" Style="{StaticResource PrimaryPill}" Width="280" Margin="12,0,0,0" Click="Organize_Click">
+                    <TextBlock x:Name="PreviewOrganizeText" FontWeight="SemiBold" />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- ================= History screen: undo any earlier cleanup ================= -->
+        <Grid x:Name="HistoryView" Margin="40,56,40,8" MaxWidth="640" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <StackPanel>
+                <TextBlock Style="{StaticResource Title}" FontSize="26" Text="{DynamicResource history.title}" />
+                <TextBlock x:Name="HistorySubtitle" Style="{StaticResource Secondary}" FontSize="14" Margin="0,6,0,0" />
+            </StackPanel>
+            <Border Grid.Row="1" Margin="0,18,0,0" CornerRadius="12" Padding="4"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                <ScrollViewer Padding="14,8" Focusable="False">
+                    <ItemsControl x:Name="HistoryList" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type local:HistoryItem}">
+                                <Grid Margin="0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Text}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                    <Button Grid.Column="1" Style="{StaticResource GhostPill}" Height="34" MinWidth="110" Tag="{Binding RunId}"
+                                            Content="{DynamicResource history.undo}" Click="HistoryUndo_Click"
+                                            Visibility="{Binding CanUndo, Converter={StaticResource BoolToVis}}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Status}" VerticalAlignment="Center" FontSize="12"
+                                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+            <Button Grid.Row="2" Style="{StaticResource GhostPill}" Width="140" Margin="0,18,0,8" HorizontalAlignment="Center"
+                    Content="{DynamicResource preview.back}" Click="Back_Click" />
+        </Grid>
+
         <!-- Language switch -->
         <Border x:Name="LangSwitch" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,16,0" CornerRadius="14" Padding="3"
                 Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
@@ -432,7 +546,10 @@
 
         <!-- Footer -->
         <TextBlock Grid.Row="1" Margin="16,0,16,14" FontSize="11" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
-                   Foreground="{DynamicResource TextFillColorTertiaryBrush}" Opacity="0.8"
-                   Text="{DynamicResource s.footer}" />
+                   Foreground="{DynamicResource TextFillColorTertiaryBrush}">
+            <Run Text="{DynamicResource s.footer}" />
+            <Run Text="  ·  " />
+            <Hyperlink Click="Rules_Click" Foreground="{DynamicResource TextFillColorSecondaryBrush}"><Run Text="{DynamicResource link.rules}" /></Hyperlink>
+        </TextBlock>
     </Grid>
 </Window>

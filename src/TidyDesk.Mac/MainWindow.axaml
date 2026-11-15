@@ -2,21 +2,41 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:TidyDesk.Mac"
         x:Class="TidyDesk.Mac.MainWindow"
-        Title="TidyDesk" Width="720" Height="720" MinWidth="460" MinHeight="520"
-        WindowStartupLocation="CenterScreen">
+        Title="TidyDesk" Width="720" Height="760" MinWidth="460" MinHeight="540"
+        WindowStartupLocation="CenterScreen" Background="{DynamicResource WindowBg}">
 
     <Window.Resources>
-        <!-- Brand colors: match the logo and the Windows app, identical in light and dark mode -->
-        <SolidColorBrush x:Key="Brand" Color="#2B84EA" />
-        <SolidColorBrush x:Key="BrandSoft" Color="#262B84EA" />
-        <LinearGradientBrush x:Key="BrandGradient" StartPoint="0%,0%" EndPoint="100%,100%">
-            <GradientStop Color="#45A0F5" Offset="0" />
-            <GradientStop Color="#1D68D8" Offset="1" />
-        </LinearGradientBrush>
-        <LinearGradientBrush x:Key="SuccessGradient" StartPoint="0%,0%" EndPoint="100%,100%">
-            <GradientStop Color="#4ADE9B" Offset="0" />
-            <GradientStop Color="#16A34A" Offset="1" />
-        </LinearGradientBrush>
+        <ResourceDictionary>
+            <!-- Surfaces for light and dark mode -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="WindowBg" Color="#F6F7F9" />
+                    <SolidColorBrush x:Key="CardBg" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="CardBgHover" Color="#F1F5FB" />
+                    <SolidColorBrush x:Key="CardStroke" Color="#DFE3EA" />
+                    <SolidColorBrush x:Key="TextSoft" Color="#5F6670" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="WindowBg" Color="#1C1D20" />
+                    <SolidColorBrush x:Key="CardBg" Color="#26282C" />
+                    <SolidColorBrush x:Key="CardBgHover" Color="#2E3035" />
+                    <SolidColorBrush x:Key="CardStroke" Color="#383B41" />
+                    <SolidColorBrush x:Key="TextSoft" Color="#A8AEB8" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <!-- Brand colors: match the logo and the Windows app -->
+            <SolidColorBrush x:Key="Brand" Color="#2B84EA" />
+            <SolidColorBrush x:Key="BrandSoft" Color="#262B84EA" />
+            <LinearGradientBrush x:Key="BrandGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#45A0F5" Offset="0" />
+                <GradientStop Color="#1D68D8" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="SuccessGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#4ADE9B" Offset="0" />
+                <GradientStop Color="#16A34A" Offset="1" />
+            </LinearGradientBrush>
+        </ResourceDictionary>
     </Window.Resources>
 
     <Window.Styles>
@@ -28,7 +48,7 @@
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
         <Style Selector="TextBlock.secondary">
-            <Setter Property="Opacity" Value="0.72" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSoft}" />
             <Setter Property="TextWrapping" Value="Wrap" />
             <Setter Property="TextAlignment" Value="Center" />
             <Setter Property="HorizontalAlignment" Value="Center" />
@@ -57,30 +77,51 @@
             <Setter Property="Foreground" Value="White" />
         </Style>
 
-        <!-- Secondary action: outlined pill -->
+        <!-- Secondary action: outlined pill on the card color -->
         <Style Selector="Button.ghost">
             <Setter Property="Height" Value="44" />
             <Setter Property="CornerRadius" Value="22" />
+            <Setter Property="Background" Value="{DynamicResource CardBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardStroke}" />
+            <Setter Property="BorderThickness" Value="1" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
+        <Style Selector="Button.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource CardBgHover}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardStroke}" />
+        </Style>
 
-        <!-- Text-only button (undo link, language switch, remove) -->
+        <!-- Text-only button (links, remove) -->
         <Style Selector="Button.link">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="4,2" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSoft}" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
         <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource Brand}" />
         </Style>
+        <Style Selector="Button.link:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.link TextBlock">
+            <Setter Property="TextDecorations" Value="Underline" />
+        </Style>
+
         <Style Selector="Button.lang">
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Padding" Value="11,4" />
             <Setter Property="CornerRadius" Value="11" />
             <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSoft}" />
         </Style>
         <Style Selector="Button.lang.selected">
             <Setter Property="Background" Value="{StaticResource BrandGradient}" />
@@ -91,42 +132,65 @@
             <Setter Property="Foreground" Value="White" />
         </Style>
 
-        <!-- Folder card: brand-colored ring when selected; the card itself keeps its normal color -->
+        <!-- Folder card: white (light) or raised (dark) surface, brand ring when selected -->
         <Style Selector="ToggleButton.card">
             <Setter Property="Width" Value="136" />
-            <Setter Property="Height" Value="148" />
+            <Setter Property="Height" Value="164" />
             <Setter Property="CornerRadius" Value="18" />
-            <Setter Property="BorderThickness" Value="2" />
-            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Background" Value="{DynamicResource CardBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardStroke}" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="VerticalContentAlignment" Value="Top" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Padding" Value="8,22,8,8" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
+        <Style Selector="ToggleButton.card:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource CardBgHover}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardStroke}" />
+            <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+        </Style>
         <Style Selector="ToggleButton.card:checked /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource ButtonBackground}" />
+            <Setter Property="Background" Value="{DynamicResource CardBg}" />
             <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
             <Setter Property="BorderBrush" Value="{StaticResource Brand}" />
         </Style>
         <Style Selector="ToggleButton.card:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPointerOver}" />
-            <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPointerOver}" />
+            <Setter Property="Background" Value="{DynamicResource CardBgHover}" />
             <Setter Property="BorderBrush" Value="{StaticResource Brand}" />
         </Style>
-        <Style Selector="ToggleButton.card:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPressed}" />
-            <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPressed}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brand}" />
+        <Style Selector="ToggleButton.card:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource CardBgHover}" />
+            <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+        </Style>
+        <Style Selector="ToggleButton.card:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource CardBg}" />
+            <Setter Property="Opacity" Value="0.55" />
         </Style>
         <Style Selector="Button.add">
             <Setter Property="Width" Value="136" />
-            <Setter Property="Height" Value="148" />
+            <Setter Property="Height" Value="164" />
             <Setter Property="CornerRadius" Value="18" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="1.5" />
-            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardStroke}" />
+            <Setter Property="VerticalContentAlignment" Value="Top" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Padding" Value="8,22,8,8" />
             <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.add:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource CardBgHover}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brand}" />
+        </Style>
+
+        <!-- Lists on the preview and history screens -->
+        <Style Selector="Border.list">
+            <Setter Property="Background" Value="{DynamicResource CardBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardStroke}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Margin" Value="0,18,0,0" />
         </Style>
     </Window.Styles>
 
@@ -148,39 +212,43 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.DataTemplates>
                         <DataTemplate DataType="local:FolderItem">
-                            <Panel Width="136" Height="148" Margin="6">
+                            <Panel Width="136" Height="164" Margin="6">
                                 <ToggleButton Classes="card" IsChecked="{Binding IsChecked}" IsEnabled="{Binding IsAllowed}"
                                               Click="Folder_Toggled" ToolTip.Tip="{Binding Tooltip}" AutomationProperties.Name="{Binding Name}">
                                     <StackPanel>
-                                        <Border Width="52" Height="52" CornerRadius="16" Background="{StaticResource BrandSoft}" HorizontalAlignment="Center">
-                                            <TextBlock Text="{Binding Glyph}" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        <Border Width="52" Height="52" CornerRadius="16" Background="{StaticResource BrandGradient}" HorizontalAlignment="Center">
+                                            <PathIcon Data="{Binding Icon}" Width="24" Height="24" Foreground="White" />
                                         </Border>
                                         <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" Margin="0,12,0,0"
                                                    HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="116" />
-                                        <TextBlock Text="{Binding Badge}" FontSize="12" Margin="0,2,0,0" HorizontalAlignment="Center" Opacity="0.7" />
+                                        <TextBlock Text="{Binding Badge}" FontSize="12" Margin="0,2,0,0" HorizontalAlignment="Center" Foreground="{DynamicResource TextSoft}" />
                                     </StackPanel>
                                 </ToggleButton>
                                 <!-- Check badge on selected cards -->
                                 <Border Width="22" Height="22" CornerRadius="11" Background="{StaticResource BrandGradient}" IsHitTestVisible="False"
                                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,10,0" IsVisible="{Binding IsChecked}">
-                                    <TextBlock Text="✓" Foreground="White" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <PathIcon Data="{x:Static local:MainWindow.CheckIcon}" Width="12" Height="12" Foreground="White" />
                                 </Border>
                                 <Button Classes="link" Width="24" Height="24" Padding="0" Margin="6,6,0,0"
                                         HorizontalAlignment="Left" VerticalAlignment="Top" IsVisible="{Binding IsCustom}"
                                         Tag="{Binding}" Click="RemoveFolder_Click"
                                         ToolTip.Tip="{Binding RemoveTip}" AutomationProperties.Name="{Binding RemoveTip}">
-                                    <TextBlock Text="✕" FontSize="10" Opacity="0.6" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <PathIcon Data="{x:Static local:MainWindow.DismissIcon}" Width="10" Height="10" />
                                 </Button>
+                                <CheckBox HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,6" MinHeight="0" FontSize="11"
+                                          IsVisible="{Binding IsCustom}" IsEnabled="{Binding IsAllowed}" IsChecked="{Binding IncludeSubfolders}"
+                                          Click="Subfolders_Toggled" Content="{Binding SubfoldersLabel}" ToolTip.Tip="{Binding SubfoldersTip}"
+                                          Foreground="{DynamicResource TextSoft}" />
                             </Panel>
                         </DataTemplate>
                         <DataTemplate DataType="local:AddFolderTile">
                             <Button Classes="add" Margin="6" Click="AddFolder_Click" ToolTip.Tip="{Binding Tip}" AutomationProperties.Name="{Binding Tip}">
                                 <StackPanel>
-                                    <Border Width="52" Height="52" CornerRadius="16" Background="{DynamicResource ButtonBackground}" HorizontalAlignment="Center">
-                                        <TextBlock Text="+" FontSize="26" Opacity="0.7" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <Border Width="52" Height="52" CornerRadius="16" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource CardStroke}"
+                                            BorderThickness="1" HorizontalAlignment="Center">
+                                        <PathIcon Data="{Binding Icon}" Width="20" Height="20" Foreground="{DynamicResource TextSoft}" />
                                     </Border>
-                                    <TextBlock Text="{Binding Label}" FontSize="14" Margin="0,12,0,0" HorizontalAlignment="Center" Opacity="0.72" />
-                                    <TextBlock Text=" " FontSize="12" Margin="0,2,0,0" />
+                                    <TextBlock Text="{Binding Label}" FontSize="14" Margin="0,12,0,0" HorizontalAlignment="Center" Foreground="{DynamicResource TextSoft}" />
                                 </StackPanel>
                             </Button>
                         </DataTemplate>
@@ -188,30 +256,41 @@
                 </ItemsControl>
                 <TextBlock x:Name="FolderError" Classes="secondary" Margin="0,10,0,0" IsVisible="False" Foreground="#D13438" />
 
-                <Button x:Name="OrganizeButton" Classes="primary" Width="340" Margin="0,34,0,0" Click="Organize_Click">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,0" Spacing="10">
+                    <TextBlock x:Name="AgeLabel" VerticalAlignment="Center" Foreground="{DynamicResource TextSoft}" />
+                    <ComboBox x:Name="AgeBox" MinWidth="190" SelectionChanged="Age_Changed" />
+                </StackPanel>
+
+                <Button x:Name="OrganizeButton" Classes="primary" Width="340" Margin="0,24,0,0" Click="Organize_Click">
                     <TextBlock x:Name="OrganizeText" />
                 </Button>
                 <ProgressBar x:Name="BusyBar" IsIndeterminate="True" Width="200" Height="3" MinHeight="3" Margin="0,12,0,0"
                              HorizontalAlignment="Center" Opacity="0" />
-                <TextBlock x:Name="HomeHint" FontSize="12" Margin="0,2,0,0" HorizontalAlignment="Center" Opacity="0.55" />
+                <TextBlock x:Name="HomeHint" FontSize="12" Margin="0,2,0,0" HorizontalAlignment="Center" Foreground="{DynamicResource TextSoft}" Opacity="0.8" />
                 <TextBlock x:Name="HomeMessage" Classes="secondary" FontSize="13" Margin="0,16,0,0" IsVisible="False" />
-                <Button x:Name="UndoLastLink" Classes="link" HorizontalAlignment="Center" Margin="0,8,0,0" FontSize="12"
-                        IsVisible="False" Click="UndoLast_Click">
-                    <TextBlock x:Name="UndoLastText" Opacity="0.72" TextDecorations="Underline" />
-                </Button>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                    <Button x:Name="PreviewLink" Classes="link" Click="Preview_Click"><TextBlock x:Name="PreviewLinkText" /></Button>
+                    <TextBlock Text="·" VerticalAlignment="Center" Foreground="{DynamicResource TextSoft}" Margin="2,0" />
+                    <Button Classes="link" Click="History_Click"><TextBlock x:Name="HistoryLinkText" /></Button>
+                    <TextBlock x:Name="UndoLastSeparator" Text="·" VerticalAlignment="Center" Foreground="{DynamicResource TextSoft}" Margin="2,0" IsVisible="False" />
+                    <Button x:Name="UndoLastLink" Classes="link" IsVisible="False" Click="UndoLast_Click"><TextBlock x:Name="UndoLastText" /></Button>
+                </StackPanel>
             </StackPanel>
         </Viewbox>
 
         <!-- ================= Done screen ================= -->
         <Viewbox x:Name="DoneView" StretchDirection="DownOnly" Margin="0,0,0,4" IsVisible="False">
             <StackPanel Margin="32,24" Width="560">
-                <Panel x:Name="CheckGroup" Width="116" Height="116" Margin="0,40,0,24" HorizontalAlignment="Center">
-                    <Panel.RenderTransform>
-                        <ScaleTransform />
-                    </Panel.RenderTransform>
-                    <Ellipse Fill="{StaticResource SuccessGradient}" />
-                    <Path Stroke="White" StrokeThickness="9" StrokeLineCap="Round" StrokeJoin="Round"
-                          Data="M 36,60 L 52,76 L 82,44" />
+                <!-- Check mark: circle pops in, confetti bursts -->
+                <Panel Width="240" Height="200" HorizontalAlignment="Center" Margin="0,10,0,0">
+                    <Canvas x:Name="Burst" Width="240" Height="200" IsHitTestVisible="False" />
+                    <Panel x:Name="CheckGroup" Width="116" Height="116">
+                        <Panel.RenderTransform>
+                            <ScaleTransform />
+                        </Panel.RenderTransform>
+                        <Ellipse Fill="{StaticResource SuccessGradient}" />
+                        <Path Stroke="White" StrokeThickness="9" StrokeLineCap="Round" StrokeJoin="Round" Data="M 36,60 L 52,76 L 82,44" />
+                    </Panel>
                 </Panel>
 
                 <TextBlock x:Name="DoneTitle" Classes="title" />
@@ -226,9 +305,9 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="local:ChipItem">
                             <Border Background="{Binding Tint}" CornerRadius="15" Padding="12,6" Margin="4">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Glyph}" FontSize="13" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Text}" Margin="7,0,0,0" Foreground="{Binding Accent}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <StackPanel Orientation="Horizontal" Spacing="7">
+                                    <PathIcon Data="{Binding Icon}" Width="14" Height="14" Foreground="{Binding Accent}" />
+                                    <TextBlock Text="{Binding Text}" Foreground="{Binding Accent}" FontWeight="SemiBold" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Border>
                         </DataTemplate>
@@ -240,9 +319,12 @@
                 <Button Classes="primary" Width="340" Margin="0,32,0,0" Click="OpenTargets_Click">
                     <TextBlock x:Name="OpenText" />
                 </Button>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
-                    <Button x:Name="UndoButton" Classes="ghost" Width="164" Margin="0,0,12,0" Click="Undo_Click">
-                        <TextBlock x:Name="UndoText" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0" Spacing="12">
+                    <Button x:Name="UndoButton" Classes="ghost" Width="164" Click="Undo_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <PathIcon Data="{x:Static local:MainWindow.UndoIcon}" Width="14" Height="14" />
+                            <TextBlock x:Name="UndoText" VerticalAlignment="Center" />
+                        </StackPanel>
                     </Button>
                     <Button Classes="ghost" Width="164" Click="Back_Click">
                         <TextBlock x:Name="OkText" />
@@ -251,12 +333,72 @@
             </StackPanel>
         </Viewbox>
 
+        <!-- ================= Preview screen: what will move where ================= -->
+        <Grid x:Name="PreviewView" RowDefinitions="Auto,*,Auto" Margin="40,40,40,8" MaxWidth="720" IsVisible="False">
+            <StackPanel>
+                <TextBlock x:Name="PreviewTitle" Classes="title" FontSize="26" />
+                <TextBlock x:Name="PreviewSubtitle" Classes="secondary" FontSize="14" Margin="0,6,0,0" />
+            </StackPanel>
+            <Border Grid.Row="1" Classes="list">
+                <ListBox x:Name="PreviewList" Background="Transparent" Padding="10,6">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="local:PreviewItem">
+                            <Grid ColumnDefinitions="Auto,*" Margin="0,2">
+                                <Border Width="30" Height="30" CornerRadius="9" Background="{Binding Tint}" VerticalAlignment="Center">
+                                    <PathIcon Data="{Binding Icon}" Width="15" Height="15" Foreground="{Binding Accent}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Detail}" FontSize="12" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextSoft}" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,8" Spacing="12">
+                <Button Classes="ghost" Width="140" Click="Back_Click"><TextBlock x:Name="PreviewBackText" /></Button>
+                <Button x:Name="PreviewOrganize" Classes="primary" Width="280" Click="Organize_Click"><TextBlock x:Name="PreviewOrganizeText" /></Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- ================= History screen: undo any earlier cleanup ================= -->
+        <Grid x:Name="HistoryView" RowDefinitions="Auto,*,Auto" Margin="40,40,40,8" MaxWidth="640" IsVisible="False">
+            <StackPanel>
+                <TextBlock x:Name="HistoryTitle" Classes="title" FontSize="26" />
+                <TextBlock x:Name="HistorySubtitle" Classes="secondary" FontSize="14" Margin="0,6,0,0" />
+            </StackPanel>
+            <Border Grid.Row="1" Classes="list">
+                <ScrollViewer Padding="16,8">
+                    <ItemsControl x:Name="HistoryList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="local:HistoryItem">
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,6">
+                                    <TextBlock Text="{Binding Text}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                    <Button Grid.Column="1" Classes="ghost" Height="34" MinWidth="110" Tag="{Binding RunId}"
+                                            Content="{Binding UndoLabel}" Click="HistoryUndo_Click" IsVisible="{Binding CanUndo}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Status}" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSoft}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+            <Button Grid.Row="2" Classes="ghost" Width="140" Margin="0,18,0,8" HorizontalAlignment="Center" Click="Back_Click">
+                <TextBlock x:Name="HistoryBackText" />
+            </Button>
+        </Grid>
+
         <!-- ================= Footer ================= -->
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="20,0,16,14">
-            <TextBlock x:Name="Footer" FontSize="12" Opacity="0.5" VerticalAlignment="Center" />
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock x:Name="Footer" FontSize="12" Foreground="{DynamicResource TextSoft}" Opacity="0.8" VerticalAlignment="Center" />
+                <TextBlock Text="  ·" FontSize="12" Foreground="{DynamicResource TextSoft}" Opacity="0.8" VerticalAlignment="Center" />
+                <Button Classes="link" Click="Rules_Click"><TextBlock x:Name="RulesLinkText" /></Button>
+            </StackPanel>
             <StackPanel x:Name="LangSwitch" Grid.Column="1" Orientation="Horizontal" Spacing="2">
-                <Button x:Name="LangTr" Classes="lang" Tag="tr" Content="TR" Click="Language_Click" />
-                <Button x:Name="LangEn" Classes="lang" Tag="en" Content="EN" Click="Language_Click" />
+                <Button x:Name="LangTr" Classes="lang" Tag="tr" Content="TR" Click="Language_Click" AutomationProperties.Name="Türkçe" />
+                <Button x:Name="LangEn" Classes="lang" Tag="en" Content="EN" Click="Language_Click" AutomationProperties.Name="English" />
             </StackPanel>
         </Grid>
     </Grid>

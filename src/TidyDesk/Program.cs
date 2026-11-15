@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Windows;
 using TidyDesk.Core;
 
@@ -7,7 +8,8 @@ internal static class Program
 {
     /// <summary>
     /// Portable app: no installer, no registry writes, no network access.
-    /// Command line (for testing and demos only):
+    /// Command line:
+    ///   --run, --undo   Tidy or undo without the window (see <see cref="CommandLine"/>; TidyDesk.exe --help).
     ///   --demo FOLDER   Uses the Desktop, Documents and Downloads subfolders of FOLDER instead of the
     ///                   real user folders; real files are never touched.
     /// </summary>
@@ -22,8 +24,23 @@ internal static class Program
             : new OrganizerService(paths, log, new PathGuard(demoRoot, [], []));
         Func<string, string?> resolver = demoRoot is null ? KnownFolders.Resolve : DemoResolver(demoRoot);
 
-        // Single instance: if the app is already running, its window is brought to the front.
         var suffix = demoRoot is null ? "" : ".Demo";
+        if (CommandLine.IsCommand(args))
+        {
+            // A windowed exe has no console of its own; write to the one it was started from.
+            AttachConsole(AttachParentProcess);
+            // Two copies must never move the same files at once.
+            if (Mutex.TryOpenExisting(@"Local\" + AppPaths.AppName + suffix, out var open))
+            {
+                open.Dispose();
+                Console.WriteLine("TidyDesk is open in a window. Close it first, then run the command again.");
+                return CommandLine.Failed;
+            }
+            log.Info($"Command line: {string.Join(' ', args)}");
+            return CommandLine.Run(args, service, resolver, Console.Out);
+        }
+
+        // Single instance: if the app is already running, its window is brought to the front.
         using var instance = new Mutex(true, @"Local\" + AppPaths.AppName + suffix, out var isFirst);
         using var showSignal = new EventWaitHandle(false, EventResetMode.AutoReset, @"Local\" + AppPaths.AppName + ".Show" + suffix);
         if (!isFirst)
@@ -51,6 +68,11 @@ internal static class Program
         log.Info("App closed.");
         return 0;
     }
+
+    private const int AttachParentProcess = -1;
+
+    [DllImport("kernel32.dll")]
+    private static extern bool AttachConsole(int processId);
 
     private static string? ArgValue(string[] args, string name)
     {

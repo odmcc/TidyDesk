@@ -18,3 +18,13 @@ public sealed class WindowsTheoryAttribute : TheoryAttribute
             Skip = "Windows only";
     }
 }
+
+/// <summary>A test that needs macOS (lsof, unlocked open files); skipped elsewhere.</summary>
+public sealed class MacFactAttribute : FactAttribute
+{
+    public MacFactAttribute()
+    {
+        if (!OperatingSystem.IsMacOS())
+            Skip = "macOS only";
+    }
+}

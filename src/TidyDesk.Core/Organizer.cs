@@ -25,7 +25,8 @@ public sealed class OrganizeResult
 
 /// <summary>
 /// The organizing engine. It NEVER deletes files; it only moves them and writes every move to the undo journal.
-/// Only files directly inside a source folder are considered; subfolders and folders themselves are left alone.
+/// Only files directly inside a source folder are considered, unless the source includes subfolders: then every
+/// subfolder is organized in its own place. Folders themselves are never moved.
 /// When a <paramref name="guard"/> is given, system folders and disallowed paths are rejected.
 /// </summary>
 public sealed class Organizer(RuleSet rules, Func<string, string?> folderResolver, UndoJournal journal, ILog log,
@@ -34,11 +35,28 @@ public sealed class Organizer(RuleSet rules, Func<string, string?> folderResolve
     private readonly Func<DateTime> _now = clock ?? (() => DateTime.Now);
     // A running exe isn't locked against moving, and the app may run from the folder it tidies (a USB stick).
     private readonly string? _appExe = appExe ?? Environment.ProcessPath;
+    private OpenFiles _openFiles = new();
+
+    internal const int MaxSubfolderDepth = 8;
+    internal const int MaxSubfolders = 5000;
+
+    // Folders that belong to an app or a tool: sorting inside them would break it.
+    private static readonly HashSet<string> PackageExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".app", ".bundle", ".framework", ".plugin", ".kext", ".photoslibrary", ".photolibrary", ".musiclibrary", ".tvlibrary",
+        ".imovielibrary", ".fcpbundle", ".logicx", ".band", ".pages", ".numbers", ".key", ".rtfd", ".xcodeproj", ".xcworkspace",
+        ".playground", ".lproj", ".sparsebundle",
+    };
+    private static readonly HashSet<string> SkippedFolderNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "node_modules", "$Recycle.Bin", "System Volume Information", AppPaths.AppName + "-Data",
+    };
 
     /// <summary>Dry run: works out what would happen without touching any file.</summary>
     public OrganizePlan CreatePlan()
     {
         var plan = new OrganizePlan();
+        _openFiles = new OpenFiles();
         var reserved = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var seenSources = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -69,12 +87,73 @@ public sealed class Organizer(RuleSet rules, Func<string, string?> folderResolve
                 continue;
             }
 
-            PlanFolder(folder, target, plan, reserved);
+            foreach (var dir in FoldersToScan(folder, source.IncludeSubfolders, plan))
+            {
+                var dirTarget = dir == folder ? target : Path.Combine(target, Path.GetRelativePath(folder, dir));
+                PlanFolder(dir, dirTarget, folder, plan, reserved);
+            }
         }
         return plan;
     }
 
-    private void PlanFolder(string folder, string targetRoot, OrganizePlan plan, HashSet<string> reserved)
+    /// <summary>The folder itself and, when asked, its subfolders (breadth first, without following links).</summary>
+    private IEnumerable<string> FoldersToScan(string root, bool includeSubfolders, OrganizePlan plan)
+    {
+        yield return root;
+        if (!includeSubfolders)
+            yield break;
+
+        var queue = new Queue<(string Dir, int Depth)>();
+        queue.Enqueue((root, 0));
+        var count = 0;
+        while (queue.Count > 0)
+        {
+            var (dir, depth) = queue.Dequeue();
+            if (depth >= MaxSubfolderDepth)
+                continue;
+            List<DirectoryInfo> subfolders;
+            try
+            {
+                subfolders = new DirectoryInfo(dir).EnumerateDirectories().OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                continue; // reported when the folder's own files are read
+            }
+            foreach (var sub in subfolders)
+            {
+                if (SkipSubfolder(sub))
+                    continue;
+                if (++count > MaxSubfolders)
+                {
+                    plan.Errors.Add($"{root}: only the first {MaxSubfolders} subfolders are organized.");
+                    yield break;
+                }
+                yield return sub.FullName;
+                queue.Enqueue((sub.FullName, depth + 1));
+            }
+        }
+    }
+
+    private bool SkipSubfolder(DirectoryInfo dir)
+    {
+        try
+        {
+            return rules.ReservedFolderNames.Contains(dir.Name)            // already organized: PDF, Belgeler, Images...
+                || dir.Name.StartsWith('.')
+                || (dir.Attributes & (FileAttributes.Hidden | FileAttributes.System)) != 0
+                || dir.LinkTarget is not null                              // never follow a link or junction out of the folder
+                || PackageExtensions.Contains(dir.Extension)
+                || SkippedFolderNames.Contains(dir.Name)
+                || Directory.Exists(Path.Combine(dir.FullName, ".git"));   // a code repository
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return true;
+        }
+    }
+
+    private void PlanFolder(string folder, string targetRoot, string sourceRoot, OrganizePlan plan, HashSet<string> reserved)
     {
         IEnumerable<FileInfo> files;
         try
@@ -103,7 +182,7 @@ public sealed class Organizer(RuleSet rules, Func<string, string?> folderResolve
 
             var destination = BuildDestination(targetRoot, category, file, reserved);
             reserved.Add(destination);
-            plan.Moves.Add(new PlannedMove(file.FullName, destination, category, folder, file.Length, byContent));
+            plan.Moves.Add(new PlannedMove(file.FullName, destination, category, sourceRoot, file.Length, byContent));
         }
     }
 
@@ -115,6 +194,7 @@ public sealed class Organizer(RuleSet rules, Func<string, string?> folderResolve
             return result;
 
         var runId = journal.NewRunId();
+        _openFiles = new OpenFiles();
         var reserved = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var folderDenied = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
 
@@ -215,7 +295,7 @@ public sealed class Organizer(RuleSet rules, Func<string, string?> folderResolve
             return $"Newer than {rules.MinAgeDays} days";
         if (FileSafety.HasOfficeOwnerFile(file))
             return "Open in Office";
-        if (FileSafety.IsInUse(file))
+        if (FileSafety.IsInUse(file) || _openFiles.Contains(file))
             return "Open in another program";
         return null;
     }

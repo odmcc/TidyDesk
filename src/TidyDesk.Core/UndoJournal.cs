@@ -18,7 +18,8 @@ public sealed class UndoResult
 /// so moves can be undone even if the app closes halfway.
 /// After an undo the run's file is renamed to {runId}.undone.jsonl and kept as an audit record.
 /// </summary>
-public sealed class UndoJournal(string dir, ILog log)
+/// <param name="volumeRoots">For tests; defaults to the mounted disks and USB sticks.</param>
+public sealed class UndoJournal(string dir, ILog log, Func<IEnumerable<string>>? volumeRoots = null)
 {
     private const string ActiveSuffix = ".jsonl";
     private const string UndoneSuffix = ".undone.jsonl";
@@ -67,30 +68,38 @@ public sealed class UndoJournal(string dir, ILog log)
         var entries = ReadEntries(file);
         var touchedDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+        var sourceDirs = entries.Select(e => Path.GetDirectoryName(e.From)!).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
         foreach (var entry in Enumerable.Reverse(entries))
         {
+            var (from, to) = (entry.From, entry.To);
             try
             {
-                if (!File.Exists(entry.To))
+                if (!File.Exists(to) && FindOnRenamedVolume(from, to) is { } found)
                 {
-                    result.Failed.Add(new SkippedFile(entry.To, "The moved file is no longer there (it may have been moved or deleted)."));
+                    (from, to) = found;
+                    sourceDirs.Add(Path.GetDirectoryName(from)!);
+                    log.Info($"Found on a renamed disk: {entry.To} -> {to}");
+                }
+                if (!File.Exists(to))
+                {
+                    result.Failed.Add(new SkippedFile(to, "The moved file is no longer there (it may have been moved or deleted)."));
                     continue;
                 }
-                Directory.CreateDirectory(Path.GetDirectoryName(entry.From)!);
-                var restoreTo = FileSafety.MakeUnique(entry.From);
-                File.Move(entry.To, restoreTo);
-                touchedDirs.Add(Path.GetDirectoryName(entry.To)!);
+                Directory.CreateDirectory(Path.GetDirectoryName(from)!);
+                var restoreTo = FileSafety.MakeUnique(from);
+                File.Move(to, restoreTo);
+                touchedDirs.Add(Path.GetDirectoryName(to)!);
                 result.Restored++;
-                log.Info($"Restored: {entry.To} -> {restoreTo}");
+                log.Info($"Restored: {to} -> {restoreTo}");
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                result.Failed.Add(new SkippedFile(entry.To, ex.Message));
-                log.Error($"Couldn't restore: {entry.To}", ex);
+                result.Failed.Add(new SkippedFile(to, ex.Message));
+                log.Error($"Couldn't restore: {to}", ex);
             }
         }
 
-        var sourceDirs = entries.Select(e => Path.GetDirectoryName(e.From)!).ToHashSet(StringComparer.OrdinalIgnoreCase);
         RemoveEmptyCreatedDirs(touchedDirs, sourceDirs);
 
         if (File.Exists(file))
@@ -122,6 +131,54 @@ public sealed class UndoJournal(string dir, ILog log)
                 }
                 current = Path.GetDirectoryName(current);
             }
+        }
+    }
+
+    /// <summary>
+    /// A USB stick or second disk can come back under another letter (E: to F:) or name (/Volumes/USB to /Volumes/USB 1).
+    /// Looks for the file at the same place on the other mounted disks; used only when exactly one disk has it.
+    /// </summary>
+    private (string From, string To)? FindOnRenamedVolume(string from, string to)
+    {
+        if (VolumeRoot(to) is not { } oldRoot || !string.Equals(VolumeRoot(from), oldRoot, StringComparison.OrdinalIgnoreCase))
+            return null;
+        var relativeFrom = Path.GetRelativePath(oldRoot, from);
+        var relativeTo = Path.GetRelativePath(oldRoot, to);
+        var matches = (volumeRoots ?? CurrentVolumeRoots)()
+            .Where(root => !string.Equals(Path.TrimEndingDirectorySeparator(root), Path.TrimEndingDirectorySeparator(oldRoot), StringComparison.OrdinalIgnoreCase))
+            .Select(root => (From: Path.Combine(root, relativeFrom), To: Path.Combine(root, relativeTo)))
+            .Where(c => File.Exists(c.To))
+            .Take(2)
+            .ToList();
+        return matches.Count == 1 ? matches[0] : null;
+    }
+
+    /// <summary>"E:\" for a file on a non-system Windows drive, "/Volumes/USB" for an external disk on a Mac; otherwise null.</summary>
+    internal static string? VolumeRoot(string path)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            var root = Path.GetPathRoot(path);
+            var system = Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.Windows));
+            return root is { Length: 3 } && root[1] == ':' && !string.Equals(root, system, StringComparison.OrdinalIgnoreCase) ? root : null;
+        }
+        var parts = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2 && parts[0] == "Volumes" ? "/Volumes/" + parts[1] : null;
+    }
+
+    private static IEnumerable<string> CurrentVolumeRoots()
+    {
+        try
+        {
+            return DriveInfo.GetDrives()
+                .Where(d => d.IsReady && d.DriveType is DriveType.Fixed or DriveType.Removable)
+                .Select(d => d.RootDirectory.FullName)
+                .Where(root => VolumeRoot(Path.Combine(root, "x")) is not null)
+                .ToList();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return [];
         }
     }
 

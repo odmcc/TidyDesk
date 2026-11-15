@@ -12,7 +12,8 @@ using Microsoft.Win32;
 namespace TidyDesk;
 
 /// <summary>
-/// Two screens: pick folders and press the button → animated "done" screen.
+/// Main screens: pick folders and press the button → animated "done" screen. Also a preview of what will move
+/// and a history of earlier cleanups, each of which can be undone.
 /// Scanning runs in the background whenever the selection changes; the user only sees the counts.
 /// </summary>
 public partial class MainWindow : Window
@@ -37,6 +38,9 @@ public partial class MainWindow : Window
     private int _analyzeVersion;
     private bool _busy;
     private string? _lastRunId;
+    private OrganizePlan? _lastPlan;
+    private bool _fillingAgeBox;
+    private static readonly int[] AgeChoices = [0, 7, 30, 90, 365];
     private List<string> _lastTargets = [];
 
     private double Count { get => (double)GetValue(CountProperty); set => SetValue(CountProperty, value); }
@@ -86,7 +90,10 @@ public partial class MainWindow : Window
         foreach (var path in _settings.CustomFolders.Distinct(StringComparer.OrdinalIgnoreCase))
         {
             if (!_folders.Any(f => SamePath(f.Path, path)))
-                _folders.Add(new FolderItem(DisplayName(path), path, "", isCustom: true, Problem(path)));
+                _folders.Add(new FolderItem(DisplayName(path), path, "", isCustom: true, Problem(path))
+                {
+                    IncludeSubfolders = _settings.Subfolders.Any(s => SamePath(s, path)),
+                });
         }
 
         // Desktop and Downloads are selected on first launch; after that the user's choice is remembered.
@@ -96,6 +103,32 @@ public partial class MainWindow : Window
     }
 
     private async void Folder_Toggled(object sender, RoutedEventArgs e) => await SelectionChangedAsync();
+
+    private async void Subfolders_Toggled(object sender, RoutedEventArgs e) => await SelectionChangedAsync();
+
+    private async void Age_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_fillingAgeBox || AgeBox.SelectedItem is not ComboBoxItem { Tag: int days })
+            return;
+        _settings.MinAgeDays = days;
+        await SelectionChangedAsync();
+    }
+
+    private void FillAgeBox()
+    {
+        _fillingAgeBox = true;
+        AgeBox.Items.Clear();
+        // A value from a hand-edited settings file that isn't in the list is still shown.
+        foreach (var days in AgeChoices.Append(_settings.MinAgeDays).Distinct().Order())
+        {
+            var text = AgeChoices.Contains(days) ? Strings.T($"age.{days}") : Strings.Language == "en" ? $"Older than {days} days" : $"{days} günden eski";
+            var item = new ComboBoxItem { Content = text, Tag = days };
+            AgeBox.Items.Add(item);
+            if (days == _settings.MinAgeDays)
+                AgeBox.SelectedItem = item;
+        }
+        _fillingAgeBox = false;
+    }
 
     private async void AddFolder_Click(object sender, RoutedEventArgs e)
     {
@@ -135,7 +168,14 @@ public partial class MainWindow : Window
     {
         FolderError.Visibility = Visibility.Collapsed;
         HomeMessage.Visibility = Visibility.Collapsed;
+        SaveChoices();
+        await AnalyzeAsync();
+    }
+
+    private void SaveChoices()
+    {
         _settings.Folders = SelectedFolders();
+        _settings.Subfolders = _folders.Where(f => f.IncludeSubfolders).Select(f => f.Path).ToList();
         try
         {
             _service.SaveSettings(_settings);
@@ -144,12 +184,12 @@ public partial class MainWindow : Window
         {
             _service.Log.Warn($"Couldn't save settings: {ex.Message}");
         }
-        await AnalyzeAsync();
     }
 
     private List<string> SelectedFolders() => _folders.Where(f => f.IsChecked).Select(f => f.Path).ToList();
 
-    private OrganizeOptions Options() => new(SelectedFolders(), MinAgeDays: 0, MonthFolders: false, Strings.Language);
+    private OrganizeOptions Options() => new(SelectedFolders(), _settings.MinAgeDays, MonthFolders: false, Strings.Language,
+        _folders.Where(f => f.IsChecked && f.IncludeSubfolders).Select(f => f.Path).ToList());
 
     private string? Problem(string path) => _service.Guard.Check(path) is { } problem ? Strings.Core(problem) : null;
 
@@ -160,15 +200,7 @@ public partial class MainWindow : Window
         if (sender is not FrameworkElement { Tag: string language } || language == Strings.Language)
             return;
         _settings.Language = language;
-        _settings.Folders = SelectedFolders();
-        try
-        {
-            _service.SaveSettings(_settings);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            _service.Log.Warn($"Couldn't save settings: {ex.Message}");
-        }
+        SaveChoices();
         ApplyLanguage();
         LoadFolders();
         UpdateUndoLink();
@@ -180,6 +212,7 @@ public partial class MainWindow : Window
     private void ApplyLanguage()
     {
         Strings.Apply(this, _settings.Language);
+        FillAgeBox();
         if (_demoMode)
             Title = Strings.T("s.demoTitle");
         foreach (var button in new[] { LangTr, LangEn })
@@ -202,6 +235,8 @@ public partial class MainWindow : Window
         var options = Options();
         if (options.Folders.Count == 0)
         {
+            _lastPlan = null;
+            PreviewLink.IsEnabled = false;
             foreach (var f in _folders)
                 f.Badge = "";
             SetOrganizeButton(Strings.T("btn.pickFolder"), "", enabled: false);
@@ -223,6 +258,8 @@ public partial class MainWindow : Window
         }
         if (version != _analyzeVersion)
             return; // The selection changed meanwhile; a newer scan is running.
+        _lastPlan = plan;
+        PreviewLink.IsEnabled = plan.Moves.Count + plan.Skipped.Count > 0;
 
         foreach (var folder in _folders)
         {
@@ -271,12 +308,14 @@ public partial class MainWindow : Window
 
         if (result is null)
         {
+            ShowHome();
             ShowHomeMessage(Strings.T("msg.organizeFailed"), success: false);
             await AnalyzeAsync();
             return;
         }
         if (result.Moved.Count == 0)
         {
+            ShowHome();
             ShowHomeMessage(result.Failed.Count > 0
                 ? Strings.T("msg.filesOpen")
                 : Strings.T("msg.nothingLeft"), success: result.Failed.Count == 0);
@@ -326,6 +365,70 @@ public partial class MainWindow : Window
         await AnalyzeAsync();
     }
 
+    private async void HistoryUndo_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: string runId })
+            await UndoAsync(runId);
+    }
+
+    // ================= Preview, history, rules =================
+
+    private void Preview_Click(object sender, RoutedEventArgs e)
+    {
+        if (_lastPlan is not { } plan || _busy)
+            return;
+        var caution = (Brush)FindResource("SystemFillColorCautionBrush");
+        var cautionTint = new SolidColorBrush(Color.FromArgb(0x26, 0xC2, 0x7C, 0x0E));
+        PreviewList.ItemsSource = plan.Moves
+            .OrderBy(m => FolderName(m.SourceFolder)).ThenBy(m => m.Category).ThenBy(m => m.SourcePath, StringComparer.OrdinalIgnoreCase)
+            .Select(m => new PreviewItem(System.IO.Path.GetFileName(m.SourcePath), WhereTo(m), CategoryVisuals.Glyph(m.Category),
+                CategoryVisuals.Foreground(m.Category), CategoryVisuals.Background(m.Category)))
+            .Concat(plan.Skipped.Select(s => new PreviewItem(System.IO.Path.GetFileName(s.Path), Strings.T("preview.skipped", Strings.Core(s.Reason)),
+                "\uE7BA", caution, cautionTint)))
+            .ToList();
+        PreviewTitle.Text = plan.Moves.Count == 0 ? Strings.T("preview.empty") : Strings.T("preview.title", plan.Moves.Count);
+        PreviewOrganizeText.Text = Strings.T("btn.organize", plan.Moves.Count);
+        PreviewOrganize.IsEnabled = plan.Moves.Count > 0 && !_busy;
+        ShowView(PreviewView);
+    }
+
+    /// <summary>"Desktop › PDF", or "Documents › 2024 › PDF" for a file in a subfolder.</summary>
+    private string WhereTo(PlannedMove move)
+    {
+        var relative = System.IO.Path.GetRelativePath(move.SourceFolder, System.IO.Path.GetDirectoryName(move.DestinationPath)!);
+        var parts = relative.Split(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar).Where(p => p is not ("" or "."));
+        return string.Join("  ›  ", parts.Prepend(FolderName(move.SourceFolder)));
+    }
+
+    private void History_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy)
+            return;
+        var runs = _service.Journal.ListRuns(includeUndone: true).Take(50).ToList();
+        HistoryList.ItemsSource = runs
+            .Select(r => new HistoryItem(r.RunId, Strings.T("history.item", Strings.Date(r.Time), r.Count), !r.Undone, r.Undone ? Strings.T("history.undone") : ""))
+            .ToList();
+        HistorySubtitle.Text = runs.Count == 0 ? Strings.T("history.empty") : Strings.T("history.subtitle");
+        ShowView(HistoryView);
+    }
+
+    private void Rules_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var path = _service.EnsureRulesFile();
+            using var _ = Process.Start(new ProcessStartInfo("notepad.exe") { ArgumentList = { path }, UseShellExecute = false });
+            ShowHome();
+            ShowHomeMessage(Strings.T("rules.opened"), success: true);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
+        {
+            _service.Log.Warn($"Couldn't open the rules file: {ex.Message}");
+            ShowHome();
+            ShowHomeMessage(Strings.T("rules.openFailed", ex.Message), success: false);
+        }
+    }
+
     private void Back_Click(object sender, RoutedEventArgs e)
     {
         ShowHome();
@@ -343,6 +446,8 @@ public partial class MainWindow : Window
         _busy = busy;
         BusyBar.Visibility = busy ? Visibility.Visible : Visibility.Hidden;
         UndoButton.IsEnabled = !busy;
+        PreviewOrganize.IsEnabled = !busy && _lastPlan?.Moves.Count > 0;
+        HistoryList.IsEnabled = !busy;
         if (busy)
             SetOrganizeButton(text ?? "", "", enabled: false);
     }
@@ -351,6 +456,7 @@ public partial class MainWindow : Window
     {
         var last = _service.Journal.ListRuns().FirstOrDefault();
         UndoLastLink.Visibility = last is null ? Visibility.Collapsed : Visibility.Visible;
+        UndoLastSeparator.Visibility = UndoLastLink.Visibility;
         if (last is not null)
             UndoLastText.Text = Strings.T("msg.undoLast", last.Count);
     }
@@ -367,8 +473,7 @@ public partial class MainWindow : Window
     private void ShowHome()
     {
         UpdateUndoLink();
-        LangSwitch.Visibility = Visibility.Visible;
-        SwitchTo(HomeView, DoneView);
+        ShowView(HomeView);
     }
 
     private void ShowDone(OrganizeResult result)
@@ -387,26 +492,29 @@ public partial class MainWindow : Window
         DoneNote.Text = Strings.T("done.skipped", result.Failed.Count);
         DoneNote.Visibility = result.Failed.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-        LangSwitch.Visibility = Visibility.Collapsed; // language can't be changed on the result screen
-        SwitchTo(DoneView, HomeView);
+        ShowView(DoneView);
         PlaySuccess(result.Moved.Count);
     }
 
-    /// <summary>Smooth transition: the new screen fades in while sliding up slightly.</summary>
-    private static void SwitchTo(FrameworkElement show, FrameworkElement hide)
+    /// <summary>Shows one screen and hides the others. The language can be changed only on the main screen.</summary>
+    private void ShowView(FrameworkElement show)
     {
-        hide.Visibility = Visibility.Collapsed;
-        show.Visibility = Visibility.Visible;
+        if (show.Visibility == Visibility.Visible)
+            return;
+        foreach (var view in new FrameworkElement[] { HomeView, DoneView, PreviewView, HistoryView })
+            view.Visibility = view == show ? Visibility.Visible : Visibility.Collapsed;
+        LangSwitch.Visibility = show == HomeView ? Visibility.Visible : Visibility.Collapsed;
         Reveal(show);
     }
 
+    /// <summary>Smooth transition: the new screen fades in while sliding up slightly.</summary>
     private static void Reveal(FrameworkElement show)
     {
         if (!Animate)
             return;
-        var content = (FrameworkElement)((Viewbox)show).Child;
         Run(show, OpacityProperty, 0, 1, 260);
-        Run((TranslateTransform)content.RenderTransform, TranslateTransform.YProperty, 18, 0, 320, ease: new CubicEase { EasingMode = EasingMode.EaseOut });
+        if (show is Viewbox { Child: FrameworkElement { RenderTransform: TranslateTransform slide } })
+            Run(slide, TranslateTransform.YProperty, 18, 0, 320, ease: new CubicEase { EasingMode = EasingMode.EaseOut });
     }
 
     /// <summary>The circle pops in, the check is drawn, confetti bursts, the number counts up and categories appear one by one.</summary>

@@ -297,9 +297,9 @@ footer nav { display: flex; gap: 22px; flex-wrap: wrap; }
     <div>
       <h2 data-k="how.h">Üç adımda biter.</h2>
       <ol class="steps">
-        <li><h3 data-k="s1.h">Klasörleri seç</h3><p data-k="s1.t">Masaüstü, Belgeler ve İndirilenler hazır gelir. İstediğin başka bir klasörü de ekleyebilirsin. Her kartta kaç dosyanın düzenleneceği yazar.</p></li>
+        <li><h3 data-k="s1.h">Klasörleri seç</h3><p data-k="s1.t">Masaüstü, Belgeler ve İndirilenler hazır gelir. İstediğin başka bir klasörü de ekleyebilirsin; istersen alt klasörleri de kendi yerlerinde düzenlenir. Her kartta kaç dosyanın düzenleneceği yazar, "Neler taşınacak?" tam listeyi gösterir.</p></li>
         <li><h3 data-k="s2.h">Büyük düğmeye bas</h3><p data-k="s2.t">Dosyalar PDF, Belgeler, Tablolar, Görseller gibi klasörlere ayrılır. Uzantısı olmayan dosyalar içeriğinden tanınır.</p></li>
-        <li><h3 data-k="s3.h">Beğenmediysen geri al</h3><p data-k="s3.t">Tek tıkla her dosya eski yerine döner.</p></li>
+        <li><h3 data-k="s3.h">Beğenmediysen geri al</h3><p data-k="s3.t">Tek tıkla her dosya eski yerine döner. Geçmiş ekranından daha eski bir düzenlemeyi de geri alabilirsin.</p></li>
       </ol>
     </div>
     <div class="shots" id="shots">
@@ -394,7 +394,7 @@ footer nav { display: flex; gap: 22px; flex-wrap: wrap; }
       </div>
     </div>
     <p class="warn" data-k="dl.warn">Program henüz kod imzalı değil. Windows ilk açılışta "bilgisayarınızı korudu" uyarısı gösterebilir: <b>Ek bilgi</b>'ye, sonra <b>Yine de çalıştır</b>'a bas. Kaynak kodu açık; istersen kendin derleyebilirsin.</p>
-    <p class="warn" data-k="dl.mwarn">Mac sürümü Apple tarafından onaylanmadı (noter onayı yok). İlk açılışta macOS "doğrulanamadı" der: <b>Bitti</b>'ye bas, sonra <b>Sistem Ayarları → Gizlilik ve Güvenlik</b> sayfasının altındaki <b>Yine de Aç</b> düğmesine bas. Bunu bir kez yapman yeter. macOS, Masaüstü ve diğer klasörler için ayrıca izin sorar. Mac'te açık dosya denetimi Windows'taki kadar geniş değil: Office belgeleri tanınır, başka programlarda açık dosyalar her zaman tanınmaz. Her taşıma yine geri alınabilir.</p>
+    <p class="warn" data-k="dl.mwarn">Mac sürümü Apple tarafından onaylanmadı (noter onayı yok). İlk açılışta macOS "doğrulanamadı" der: <b>Bitti</b>'ye bas, sonra <b>Sistem Ayarları → Gizlilik ve Güvenlik</b> sayfasının altındaki <b>Yine de Aç</b> düğmesine bas. Bunu bir kez yapman yeter. macOS, Masaüstü ve diğer klasörler için ayrıca izin sorar. Mac'te açık dosyalar macOS'a sorularak bulunur; ama Önizleme gibi dosyayı açıp hemen kapatan programlar tanınamaz. Her taşıma yine geri alınabilir.</p>
   </div>
 </section>
 
@@ -419,9 +419,9 @@ const EN = {
   'p2.h': 'Every run can be undone.', 'p2.t': 'Each move is written to a journal the moment it happens, so Undo works even if you close the app halfway.',
   'p3.h': 'It never goes online.', 'p3.t': 'The code has no networking: no telemetry, updates or uploads. To recognize a file type it reads only the first few bytes.',
   'how.h': 'Done in three steps.',
-  's1.h': 'Pick your folders', 's1.t': 'Desktop, Documents and Downloads are ready to go. Add any other folder you like. Each card shows how many files will be organized.',
+  's1.h': 'Pick your folders', 's1.t': 'Desktop, Documents and Downloads are ready to go. Add any other folder you like, and have its subfolders tidied in place too if you want. Each card shows how many files will be organized; "What will move?" shows the full list.',
   's2.h': 'Press the big button', 's2.t': 'Files are sorted into folders like PDF, Documents, Spreadsheets and Images. Files without an extension are recognized by their content.',
-  's3.h': 'Undo if you don\'t like it', 's3.t': 'One click puts every file back.',
+  's3.h': 'Undo if you don\'t like it', 's3.t': 'One click puts every file back. The History screen can undo an earlier cleanup too.',
   'sn.h': 'No name? It looks inside.', 'sn.t': 'Even a file without an extension is recognized from its first few bytes. A scanned PDF goes to PDF; a Word file that lost its name goes to Documents. Reading happens only on this computer.',
   'sc.h': 'What does it move?', 'sc.t': 'It sorts by extension into these folders:',
   'c.doc': 'Documents', 'c.sheet': 'Spreadsheets', 'c.ppt': 'Presentations', 'c.img': 'Images', 'c.av': 'Video & Audio', 'c.mail': 'Emails', 'c.arc': 'Archives', 'c.inst': 'Installers',
@@ -436,7 +436,7 @@ const EN = {
   'dl.warn': 'The program is not code-signed yet. On first launch Windows may show "Windows protected your PC": press <b>More info</b>, then <b>Run anyway</b>. The source is open, so you can build it yourself.',
   'dl3.h': 'Mac (Apple Silicon)', 'dl3.t': 'M1, M2, M3, M4 and later. Open the <code>.dmg</code> and drag TidyDesk into Applications.', 'dl3.b': 'Download for Apple Silicon',
   'dl4.h': 'Mac (Intel)', 'dl4.t': 'Macs with an Intel processor. To check, open <b>Apple menu → About This Mac</b> and look at the "Chip" or "Processor" line.', 'dl4.b': 'Download for Intel Mac',
-  'dl.mwarn': 'The Mac version is not notarized by Apple. On first launch macOS says it can\'t verify the app: press <b>Done</b>, then press <b>Open Anyway</b> at the bottom of <b>System Settings → Privacy &amp; Security</b>. You only do this once. macOS also asks for permission to access the Desktop and other folders. On a Mac the open-file check is narrower than on Windows: Office documents are detected, files open in other programs are not always detected. Every move can still be undone.',
+  'dl.mwarn': 'The Mac version is not notarized by Apple. On first launch macOS says it can\'t verify the app: press <b>Done</b>, then press <b>Open Anyway</b> at the bottom of <b>System Settings → Privacy &amp; Security</b>. You only do this once. macOS also asks for permission to access the Desktop and other folders. On a Mac, open files are found by asking macOS; programs that open a file and close it right away, like Preview, can\'t be detected. Every move can still be undone.',
   'ft.l': 'MIT license. © odmcc', 'ft.src': 'Source code', 'ft.rel': 'Releases', 'ft.bug': 'Report an issue'
 };
 const T = {

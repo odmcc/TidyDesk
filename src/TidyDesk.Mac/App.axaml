@@ -6,7 +6,7 @@
     <Application.Styles>
         <FluentTheme />
     </Application.Styles>
-    <!-- An empty app menu keeps only the standard macOS items (Hide, Quit) instead of "About Avalonia" -->
+    <!-- Filled in code with "About TidyDesk" (App.RefreshMenu); macOS adds Hide and Quit -->
     <NativeMenu.Menu>
         <NativeMenu />
     </NativeMenu.Menu>

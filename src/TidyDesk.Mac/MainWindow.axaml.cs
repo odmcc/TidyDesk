@@ -3,27 +3,37 @@ using System.Diagnostics;
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
+using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using TidyDesk.Core;
+using Path = System.IO.Path;
 
 namespace TidyDesk.Mac;
 
 /// <summary>
 /// Same flow as the Windows app: pick folders and press the button → "done" screen with undo.
+/// Also a preview of what will move, a history of earlier cleanups (each can be undone) and the user's own rules.
 /// Scanning runs in the background whenever the selection changes; the user only sees the counts.
 /// </summary>
 public partial class MainWindow : Window
 {
-    private static readonly (string Token, string NameKey, string Glyph)[] StandardFolders =
+    public static readonly Geometry CheckIcon = Icons.Get(Icons.Checkmark);
+    public static readonly Geometry DismissIcon = Icons.Get(Icons.Dismiss);
+    public static readonly Geometry UndoIcon = Icons.Get(Icons.ArrowUndo);
+
+    private static readonly (string Token, string NameKey, string Icon)[] StandardFolders =
     [
-        ("desktop", "folder.desktop", "🖥"),
-        ("documents", "folder.documents", "📄"),
-        ("downloads", "folder.downloads", "⬇️"),
+        ("desktop", "folder.desktop", Icons.Desktop),
+        ("documents", "folder.documents", Icons.Document),
+        ("downloads", "folder.downloads", Icons.ArrowDownload),
     ];
+    private static readonly int[] AgeChoices = [0, 7, 30, 90, 365];
 
     private readonly OrganizerService _service;
     private readonly Func<string, string?> _resolver;
@@ -32,8 +42,11 @@ public partial class MainWindow : Window
     private readonly bool _demoMode;
     private int _analyzeVersion;
     private bool _busy;
+    private bool _fillingAgeBox;
     private string? _lastRunId;
+    private OrganizePlan? _lastPlan;
     private List<string> _lastTargets = [];
+    private DispatcherTimer? _countUp;
 
     // Required by the XAML loader and previewer.
     public MainWindow() : this(App.Service!, App.Resolver, App.DemoMode) { }
@@ -55,7 +68,7 @@ public partial class MainWindow : Window
             _ = Reveal(HomeView);
             await AnalyzeAsync();
         };
-        // When the window regains focus the counts refresh quietly; the button stays usable meanwhile.
+        // When the window regains focus (e.g. after editing the rules) the counts refresh quietly.
         Activated += async (_, _) => { if (HomeView.IsVisible && !_busy) await AnalyzeAsync(quiet: true); };
     }
 
@@ -65,15 +78,19 @@ public partial class MainWindow : Window
     {
         _tiles.Clear();
         var folders = new List<FolderItem>();
-        foreach (var (token, nameKey, glyph) in StandardFolders)
+        foreach (var (token, nameKey, icon) in StandardFolders)
         {
             if (_resolver(token) is { } path)
-                folders.Add(new FolderItem(Strings.T(nameKey), path, glyph, isCustom: false, Problem(path), Strings.T("s.removeFolder")));
+                folders.Add(NewFolder(Strings.T(nameKey), path, icon, isCustom: false, Problem(path)));
         }
         foreach (var path in _settings.CustomFolders.Distinct(StringComparer.OrdinalIgnoreCase))
         {
             if (!folders.Any(f => SamePath(f.Path, path)))
-                folders.Add(new FolderItem(DisplayName(path), path, "📁", isCustom: true, Problem(path), Strings.T("s.removeFolder")));
+            {
+                var folder = NewFolder(DisplayName(path), path, Icons.Folder, isCustom: true, Problem(path));
+                folder.IncludeSubfolders = _settings.Subfolders.Any(s => SamePath(s, path));
+                folders.Add(folder);
+            }
         }
 
         // Desktop and Downloads are selected on first launch; after that the user's choice is remembered.
@@ -86,9 +103,19 @@ public partial class MainWindow : Window
         _tiles.Add(new AddFolderTile(Strings.T("s.addFolder"), Strings.T("s.addFolderTip")));
     }
 
+    private static FolderItem NewFolder(string name, string path, string icon, bool isCustom, string? problem) =>
+        new(name, path, Icons.Get(icon), isCustom, problem)
+        {
+            RemoveTip = Strings.T("s.removeFolder"),
+            SubfoldersLabel = Strings.T("card.subfolders"),
+            SubfoldersTip = Strings.T("card.subfoldersTip"),
+        };
+
     private IEnumerable<FolderItem> Folders => _tiles.OfType<FolderItem>();
 
     private async void Folder_Toggled(object? sender, RoutedEventArgs e) => await SelectionChangedAsync();
+
+    private async void Subfolders_Toggled(object? sender, RoutedEventArgs e) => await SelectionChangedAsync();
 
     private async void AddFolder_Click(object? sender, RoutedEventArgs e)
     {
@@ -111,7 +138,8 @@ public partial class MainWindow : Window
         }
         else
         {
-            _tiles.Insert(_tiles.Count - 1, new FolderItem(DisplayName(path), path, "📁", isCustom: true, problem: null, Strings.T("s.removeFolder")) { IsChecked = true });
+            _tiles.Insert(_tiles.Count - 1, NewFolder(DisplayName(path), path, Icons.Folder, isCustom: true, problem: null));
+            ((FolderItem)_tiles[^2]).IsChecked = true;
             _settings.CustomFolders.Add(path);
         }
         await SelectionChangedAsync();
@@ -130,13 +158,14 @@ public partial class MainWindow : Window
     {
         FolderError.IsVisible = false;
         HomeMessage.IsVisible = false;
-        _settings.Folders = SelectedFolders();
-        SaveSettings();
+        SaveChoices();
         await AnalyzeAsync();
     }
 
-    private void SaveSettings()
+    private void SaveChoices()
     {
+        _settings.Folders = SelectedFolders();
+        _settings.Subfolders = Folders.Where(f => f.IncludeSubfolders).Select(f => f.Path).ToList();
         try
         {
             _service.SaveSettings(_settings);
@@ -149,7 +178,8 @@ public partial class MainWindow : Window
 
     private List<string> SelectedFolders() => Folders.Where(f => f.IsChecked).Select(f => f.Path).ToList();
 
-    private OrganizeOptions Options() => new(SelectedFolders(), MinAgeDays: 0, MonthFolders: false, Strings.Language);
+    private OrganizeOptions Options() => new(SelectedFolders(), _settings.MinAgeDays, MonthFolders: false, Strings.Language,
+        Folders.Where(f => f.IsChecked && f.IncludeSubfolders).Select(f => f.Path).ToList());
 
     private string? Problem(string path) => _service.Guard.Check(path) is { } problem ? Strings.Core(problem) : null;
 
@@ -159,6 +189,31 @@ public partial class MainWindow : Window
         FolderError.IsVisible = true;
     }
 
+    // ================= Age option =================
+
+    private async void Age_Changed(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_fillingAgeBox || AgeBox.SelectedItem is not ComboBoxItem { Tag: int days })
+            return;
+        _settings.MinAgeDays = days;
+        await SelectionChangedAsync();
+    }
+
+    private void FillAgeBox()
+    {
+        _fillingAgeBox = true;
+        var items = new List<ComboBoxItem>();
+        // A value from a hand-edited settings file that isn't in the list is still shown.
+        foreach (var days in AgeChoices.Append(_settings.MinAgeDays).Distinct().Order())
+        {
+            var text = AgeChoices.Contains(days) ? Strings.T($"age.{days}") : Strings.Language == "en" ? $"Older than {days} days" : $"{days} günden eski";
+            items.Add(new ComboBoxItem { Content = text, Tag = days });
+        }
+        AgeBox.ItemsSource = items;
+        AgeBox.SelectedItem = items.First(i => (int)i.Tag! == _settings.MinAgeDays);
+        _fillingAgeBox = false;
+    }
+
     // ================= Language =================
 
     private async void Language_Click(object? sender, RoutedEventArgs e)
@@ -166,11 +221,11 @@ public partial class MainWindow : Window
         if (sender is not Control { Tag: string language } || language == Strings.Language)
             return;
         _settings.Language = language;
-        _settings.Folders = SelectedFolders();
-        SaveSettings();
+        SaveChoices();
         ApplyLanguage();
         LoadFolders();
         UpdateUndoLink();
+        App.RefreshMenu();
         FolderError.IsVisible = false;
         HomeMessage.IsVisible = false;
         await AnalyzeAsync();
@@ -183,10 +238,19 @@ public partial class MainWindow : Window
         HomeTitle.Text = Strings.T("s.homeTitle");
         HomeSubtitle.Text = Strings.T("s.homeSubtitle");
         HomeHint.Text = Strings.T("s.homeHint");
+        AgeLabel.Text = Strings.T("age.label");
+        AutomationProperties.SetName(AgeBox, Strings.T("age.label"));
+        PreviewLinkText.Text = Strings.T("link.preview");
+        HistoryLinkText.Text = Strings.T("link.history");
+        RulesLinkText.Text = Strings.T("link.rules");
         Footer.Text = Strings.T("s.footer");
         OpenText.Text = Strings.T(OperatingSystem.IsMacOS() ? "mac.showInFinder" : "done.open");
-        UndoText.Text = "↶  " + Strings.T("done.undo");
+        UndoText.Text = Strings.T("done.undo");
         OkText.Text = Strings.T("done.ok");
+        PreviewSubtitle.Text = Strings.T("preview.subtitle");
+        PreviewBackText.Text = HistoryBackText.Text = Strings.T("preview.back");
+        HistoryTitle.Text = Strings.T("history.title");
+        FillAgeBox();
         foreach (var button in new[] { LangTr, LangEn })
             button.Classes.Set("selected", (string?)button.Tag == Strings.Language);
     }
@@ -200,6 +264,8 @@ public partial class MainWindow : Window
         var options = Options();
         if (options.Folders.Count == 0)
         {
+            _lastPlan = null;
+            PreviewLink.IsEnabled = false;
             foreach (var f in Folders)
                 f.Badge = f.IsAllowed ? "" : Strings.T("badge.blocked");
             SetOrganizeButton(Strings.T("btn.pickFolder"), enabled: false);
@@ -221,6 +287,8 @@ public partial class MainWindow : Window
         }
         if (version != _analyzeVersion)
             return; // The selection changed meanwhile; a newer scan is running.
+        _lastPlan = plan;
+        PreviewLink.IsEnabled = plan.Moves.Count + plan.Skipped.Count > 0;
 
         foreach (var folder in Folders)
         {
@@ -234,6 +302,10 @@ public partial class MainWindow : Window
             if (OperatingSystem.IsMacOS() && plan.Errors.Any(e => e.StartsWith("Couldn't read folder:", StringComparison.Ordinal)))
                 text += "\n\n" + Strings.T("mac.permission");
             ShowFolderError(text);
+        }
+        else
+        {
+            FolderError.IsVisible = false;
         }
 
         if (plan.Moves.Count == 0)
@@ -271,12 +343,14 @@ public partial class MainWindow : Window
 
         if (result is null)
         {
+            ShowHome();
             ShowHomeMessage(Strings.T("msg.organizeFailed"), success: false);
             await AnalyzeAsync();
             return;
         }
         if (result.Moved.Count == 0)
         {
+            ShowHome();
             ShowHomeMessage(result.Failed.Count > 0 ? Strings.T("msg.filesOpen") : Strings.T("msg.nothingLeft"), success: result.Failed.Count == 0);
             await AnalyzeAsync();
             return;
@@ -294,6 +368,12 @@ public partial class MainWindow : Window
     {
         if (_service.Journal.ListRuns().FirstOrDefault() is { } last)
             await UndoAsync(last.RunId);
+    }
+
+    private async void HistoryUndo_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Control { Tag: string runId })
+            await UndoAsync(runId);
     }
 
     /// <summary>No confirmation: undo never deletes anything, it only moves files back.</summary>
@@ -333,17 +413,25 @@ public partial class MainWindow : Window
     private void OpenTargets_Click(object? sender, RoutedEventArgs e)
     {
         foreach (var folder in _lastTargets.Where(Directory.Exists))
+            Open(folder);
+    }
+
+    /// <summary>Opens a folder in Finder (Explorer when the app runs on Windows), or a text file with "textEdit".</summary>
+    private bool Open(string path, bool textEdit = false)
+    {
+        try
         {
-            try
-            {
-                var start = new ProcessStartInfo(OperatingSystem.IsMacOS() ? "open" : "explorer.exe") { UseShellExecute = false };
-                start.ArgumentList.Add(folder);
-                Process.Start(start)?.Dispose();
-            }
-            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
-            {
-                _service.Log.Warn($"Couldn't open folder {folder}: {ex.Message}");
-            }
+            var start = new ProcessStartInfo(OperatingSystem.IsMacOS() ? "open" : textEdit ? "notepad.exe" : "explorer.exe") { UseShellExecute = false };
+            if (OperatingSystem.IsMacOS() && textEdit)
+                start.ArgumentList.Add("-t");
+            start.ArgumentList.Add(path);
+            Process.Start(start)?.Dispose();
+            return true;
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            _service.Log.Warn($"Couldn't open {path}: {ex.Message}");
+            return false;
         }
     }
 
@@ -352,6 +440,8 @@ public partial class MainWindow : Window
         _busy = busy;
         BusyBar.Opacity = busy ? 1 : 0;
         UndoButton.IsEnabled = !busy;
+        PreviewOrganize.IsEnabled = !busy && _lastPlan?.Moves.Count > 0;
+        HistoryList.IsEnabled = !busy;
         if (busy)
             SetOrganizeButton(text ?? "", enabled: false);
     }
@@ -359,7 +449,7 @@ public partial class MainWindow : Window
     private void UpdateUndoLink()
     {
         var last = _service.Journal.ListRuns().FirstOrDefault();
-        UndoLastLink.IsVisible = last is not null;
+        UndoLastLink.IsVisible = UndoLastSeparator.IsVisible = last is not null;
         if (last is not null)
             UndoLastText.Text = Strings.T("msg.undoLast", last.Count);
     }
@@ -371,15 +461,85 @@ public partial class MainWindow : Window
         HomeMessage.IsVisible = true;
     }
 
+    // ================= Preview, history, rules =================
+
+    private void Preview_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_lastPlan is not { } plan || _busy)
+            return;
+        var caution = new SolidColorBrush(Color.Parse("#C27C0E"));
+        var cautionTint = new SolidColorBrush(Color.Parse("#26C27C0E"));
+        var warning = Icons.Get(Icons.Warning);
+        PreviewList.ItemsSource = plan.Moves
+            .OrderBy(m => FolderName(m.SourceFolder)).ThenBy(m => m.Category).ThenBy(m => m.SourcePath, StringComparer.OrdinalIgnoreCase)
+            .Select(m => new PreviewItem(Path.GetFileName(m.SourcePath), WhereTo(m), CategoryVisuals.Icon(m.Category),
+                CategoryVisuals.Foreground(m.Category), CategoryVisuals.Background(m.Category)))
+            .Concat(plan.Skipped.Select(s => new PreviewItem(Path.GetFileName(s.Path), Strings.T("preview.skipped", Strings.Core(s.Reason)), warning, caution, cautionTint)))
+            .ToList();
+        PreviewTitle.Text = plan.Moves.Count == 0 ? Strings.T("preview.empty") : Strings.T("preview.title", plan.Moves.Count);
+        PreviewOrganizeText.Text = Strings.T("btn.organize", plan.Moves.Count);
+        PreviewOrganize.IsEnabled = plan.Moves.Count > 0 && !_busy;
+        ShowView(PreviewView);
+    }
+
+    /// <summary>"Desktop › PDF", or "Documents › 2024 › PDF" for a file in a subfolder.</summary>
+    private string WhereTo(PlannedMove move)
+    {
+        var relative = Path.GetRelativePath(move.SourceFolder, Path.GetDirectoryName(move.DestinationPath)!);
+        var parts = relative.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Where(p => p is not ("" or "."));
+        return string.Join("  ›  ", parts.Prepend(FolderName(move.SourceFolder)));
+    }
+
+    private void History_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_busy)
+            return;
+        var runs = _service.Journal.ListRuns(includeUndone: true).Take(50).ToList();
+        HistoryList.ItemsSource = runs
+            .Select(r => new HistoryItem(r.RunId, Strings.T("history.item", Strings.Date(r.Time), r.Count), !r.Undone,
+                r.Undone ? Strings.T("history.undone") : "", Strings.T("history.undo")))
+            .ToList();
+        HistorySubtitle.Text = runs.Count == 0 ? Strings.T("history.empty") : Strings.T("history.subtitle");
+        ShowView(HistoryView);
+    }
+
+    private void Rules_Click(object? sender, RoutedEventArgs e)
+    {
+        ShowHome();
+        try
+        {
+            var path = _service.EnsureRulesFile();
+            if (Open(path, textEdit: true))
+            {
+                ShowHomeMessage(Strings.T("rules.opened"), success: true);
+                return;
+            }
+            ShowHomeMessage(Strings.T("rules.openFailed", path), success: false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _service.Log.Warn($"Couldn't create the rules file: {ex.Message}");
+            ShowHomeMessage(Strings.T("rules.openFailed", ex.Message), success: false);
+        }
+    }
+
     // ================= Screens and animation =================
 
     private void ShowHome()
     {
         UpdateUndoLink();
-        LangSwitch.IsVisible = true;
-        DoneView.IsVisible = false;
-        HomeView.IsVisible = true;
-        _ = Reveal(HomeView);
+        ShowView(HomeView);
+    }
+
+    /// <summary>Shows one screen and hides the others. The language can be changed only on the main screen.</summary>
+    private void ShowView(Control show)
+    {
+        if (show.IsVisible)
+            return;
+        foreach (var view in new Control[] { HomeView, DoneView, PreviewView, HistoryView })
+            view.IsVisible = view == show;
+        LangSwitch.IsVisible = show == HomeView;
+        _ = Reveal(show);
     }
 
     private void ShowDone(OrganizeResult result)
@@ -388,23 +548,77 @@ public partial class MainWindow : Window
         _lastTargets = result.Moved.Select(m => m.SourceFolder).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
         var sources = result.Moved.Select(m => FolderName(m.SourceFolder)).Distinct().ToList();
-        DoneTitle.Text = Strings.T("done.title", result.Moved.Count);
         DoneSubtitle.Text = Strings.T("done.subtitle", Strings.JoinList(sources));
         DoneChips.ItemsSource = result.Moved.GroupBy(m => m.Category).OrderByDescending(g => g.Count())
-            .Select(g => new ChipItem($"{g.Key}  {g.Count()}", CategoryVisuals.Glyph(g.Key), CategoryVisuals.Foreground(g.Key), CategoryVisuals.Background(g.Key)))
+            .Select(g => new ChipItem($"{g.Key}  {g.Count()}", CategoryVisuals.Icon(g.Key), CategoryVisuals.Foreground(g.Key), CategoryVisuals.Background(g.Key)))
             .ToList();
         DoneNote.Text = Strings.T("done.skipped", result.Failed.Count);
         DoneNote.IsVisible = result.Failed.Count > 0;
 
-        LangSwitch.IsVisible = false; // language can't be changed on the result screen
-        HomeView.IsVisible = false;
-        DoneView.IsVisible = true;
-        _ = Reveal(DoneView);
+        ShowView(DoneView);
+        PlaySuccess(result.Moved.Count);
+    }
+
+    /// <summary>The circle pops in, confetti bursts and the number counts up (all skipped with "Reduce motion").</summary>
+    private void PlaySuccess(int movedCount)
+    {
+        _countUp?.Stop();
+        Burst.Children.Clear();
+        if (!Motion.Animate)
+        {
+            DoneTitle.Text = Strings.T("done.title", movedCount);
+            return;
+        }
+
         _ = Pop(CheckGroup);
+        PlayBurst();
+        var started = DateTime.UtcNow;
+        var duration = TimeSpan.FromMilliseconds(Math.Clamp(movedCount * 40, 500, 1100));
+        DoneTitle.Text = Strings.T("done.title", 0);
+        _countUp = new DispatcherTimer(TimeSpan.FromMilliseconds(16), DispatcherPriority.Render, (_, _) =>
+        {
+            var t = Math.Min(1, (DateTime.UtcNow - started) / duration);
+            DoneTitle.Text = Strings.T("done.title", (int)Math.Round(movedCount * (1 - (1 - t) * (1 - t))));
+            if (t >= 1)
+                _countUp?.Stop();
+        });
+        _countUp.Start();
+    }
+
+    private void PlayBurst()
+    {
+        string[] colors = ["#2B7CD3", "#D13438", "#107C41", "#E3742A", "#8764B8", "#C19C00", "#00A39A", "#C239B3"];
+        var random = new Random();
+        const int count = 18;
+        for (var i = 0; i < count; i++)
+        {
+            var size = 6 + random.NextDouble() * 6;
+            var dot = new Ellipse { Width = size, Height = size, Fill = new SolidColorBrush(Color.Parse(colors[i % colors.Length])), Opacity = 0 };
+            dot.RenderTransform = new TranslateTransform();
+            Canvas.SetLeft(dot, Burst.Width / 2 - size / 2);
+            Canvas.SetTop(dot, Burst.Height / 2 - size / 2);
+            Burst.Children.Add(dot);
+
+            var angle = i * (2 * Math.PI / count) + random.NextDouble() * 0.3;
+            var distance = 72 + random.NextDouble() * 30;
+            _ = new Animation
+            {
+                Duration = TimeSpan.FromMilliseconds(800),
+                Delay = TimeSpan.FromMilliseconds(260),
+                FillMode = FillMode.Forward,
+                Easing = new CubicEaseOut(),
+                Children =
+                {
+                    new KeyFrame { Cue = new Cue(0), Setters = { new Setter(TranslateTransform.XProperty, 0.0), new Setter(TranslateTransform.YProperty, 0.0), new Setter(OpacityProperty, 1.0) } },
+                    new KeyFrame { Cue = new Cue(0.7), Setters = { new Setter(OpacityProperty, 0.9) } },
+                    new KeyFrame { Cue = new Cue(1), Setters = { new Setter(TranslateTransform.XProperty, Math.Cos(angle) * distance), new Setter(TranslateTransform.YProperty, Math.Sin(angle) * distance), new Setter(OpacityProperty, 0.0) } },
+                },
+            }.RunAsync(dot);
+        }
     }
 
     /// <summary>The new screen fades in.</summary>
-    private static Task Reveal(Visual view) => new Animation
+    private static Task Reveal(Visual view) => !Motion.Animate ? Task.CompletedTask : new Animation
     {
         Duration = TimeSpan.FromMilliseconds(260),
         FillMode = FillMode.Forward,

@@ -9,7 +9,8 @@ internal static class Program
     /// <summary>
     /// No installer step, no network access. Data (settings, undo history, logs) lives in
     /// ~/Library/Application Support/TidyDesk. macOS itself keeps a .app to a single instance.
-    /// Command line (for testing and demos only):
+    /// Command line (TidyDesk.app/Contents/MacOS/TidyDesk):
+    ///   --run, --undo   Tidy or undo without the window (see <see cref="CommandLine"/>; --help).
     ///   --demo FOLDER   Uses the Desktop, Documents and Downloads subfolders of FOLDER instead of the
     ///                   real user folders; real files are never touched.
     /// </summary>
@@ -24,6 +25,11 @@ internal static class Program
             : new OrganizerService(paths, log, new PathGuard(demoRoot, [], []));
         App.Resolver = demoRoot is null ? KnownFolders.Resolve : DemoResolver(demoRoot);
         App.DemoMode = demoRoot is not null;
+        if (CommandLine.IsCommand(args))
+        {
+            log.Info($"Command line: {string.Join(' ', args)}");
+            return CommandLine.Run(args, App.Service, App.Resolver, Console.Out);
+        }
         log.Info($"App started (version {typeof(Program).Assembly.GetName().Version}, data: {paths.DataDir}).");
 
         var builder = AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace();

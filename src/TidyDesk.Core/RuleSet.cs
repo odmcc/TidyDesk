@@ -8,6 +8,8 @@ public sealed class SourceFolderRule
     public string Folder { get; set; } = "";
     public string Target { get; set; } = "";
     public bool Enabled { get; set; } = true;
+    /// <summary>Also organize every subfolder, each in its own place (Project\2024\PDF\...).</summary>
+    public bool IncludeSubfolders { get; set; }
 }
 
 public sealed class CategoryRule
@@ -32,10 +34,15 @@ public sealed class RuleSet
     public List<CategoryRule> Categories { get; set; } = [];
     public string OtherCategoryName { get; set; } = "Diğer";
     public string? OtherCategoryNameEn { get; set; }
-    public bool MoveUncategorized { get; set; } = true;
+    // Off unless a rules file turns it on: a short user rules file must not scatter unknown files.
+    public bool MoveUncategorized { get; set; }
     public List<string> ExcludeExtensions { get; set; } = [];
     public List<string> ExcludeNamePatterns { get; set; } = [];
     public bool SkipHiddenAndSystem { get; set; } = true;
+
+    /// <summary>Category and "other" folder names in both languages; subfolders with these names hold organized files and are not scanned.</summary>
+    [JsonIgnore]
+    public HashSet<string> ReservedFolderNames { get; } = new(StringComparer.OrdinalIgnoreCase);
 
     internal static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -63,12 +70,15 @@ public sealed class RuleSet
     }
 
     /// <summary>The default rules embedded in the app (config/rules.default.json).</summary>
-    public static RuleSet CreateDefault()
+    public static RuleSet CreateDefault() => Parse(DefaultJson());
+
+    /// <summary>The text of the embedded config/rules.default.json, comments included.</summary>
+    public static string DefaultJson()
     {
         using var stream = typeof(RuleSet).Assembly.GetManifestResourceStream("rules.default.json")
             ?? throw new InvalidOperationException("The embedded default rules file was not found.");
         using var reader = new StreamReader(stream);
-        return Parse(reader.ReadToEnd());
+        return reader.ReadToEnd();
     }
 
     private void Normalize()
@@ -79,6 +89,11 @@ public sealed class RuleSet
         foreach (var c in Categories)
             c.Extensions = c.Extensions.Select(NormalizeExtension).ToList();
         ExcludeExtensions = ExcludeExtensions.Select(NormalizeExtension).ToList();
+        foreach (var name in Categories.SelectMany(c => new[] { c.Name, c.NameEn }).Append(OtherCategoryName).Append(OtherCategoryNameEn))
+        {
+            if (!string.IsNullOrWhiteSpace(name))
+                ReservedFolderNames.Add(FileSafety.SanitizeFolderName(name));
+        }
     }
 
     private static string NormalizeExtension(string ext)

@@ -1,6 +1,8 @@
 #if WINDOWS
 using System.Windows;
 #endif
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace TidyDesk;
 
@@ -10,7 +12,7 @@ namespace TidyDesk;
 /// To add a language, add a column to the table and a button next to TR | EN.
 /// The Mac app (src/TidyDesk.Mac) compiles this same file; only <see cref="Apply"/> is WPF-specific.
 /// </summary>
-internal static class Strings
+internal static partial class Strings
 {
     public static string Language { get; private set; } = "tr";
 
@@ -67,7 +69,41 @@ internal static class Strings
         ["done.ok"] = ("Tamam", "Done"),
         ["and"] = ("ve", "and"),
 
+        // Subfolders, age, preview, history, rules
+        ["card.subfolders"] = ("Alt klasörler de", "Subfolders too"),
+        ["card.subfoldersTip"] = ("Alt klasörlerdeki dosyalar da her biri kendi yerinde düzenlenir.", "Files in subfolders are tidied too, each in its own place."),
+        ["age.label"] = ("Taşınacak dosyalar:", "Files to move:"),
+        ["age.0"] = ("Hepsi", "All files"),
+        ["age.7"] = ("1 haftadan eski", "Older than 1 week"),
+        ["age.30"] = ("1 aydan eski", "Older than 1 month"),
+        ["age.90"] = ("3 aydan eski", "Older than 3 months"),
+        ["age.365"] = ("1 yıldan eski", "Older than 1 year"),
+        ["link.preview"] = ("Neler taşınacak?", "What will move?"),
+        ["link.history"] = ("Geçmiş", "History"),
+        ["link.rules"] = ("Kuralları düzenle", "Edit rules"),
+        ["preview.title"] = ("{0} dosya taşınacak", "{0} files will move"),
+        ["preview.title.one"] = ("{0} dosya taşınacak", "{0} file will move"),
+        ["preview.subtitle"] = ("Hiçbir dosya silinmez; hepsi tek tıkla geri alınır.", "Nothing is deleted; everything can be undone in one click."),
+        ["preview.empty"] = ("Taşınacak dosya yok.", "Nothing to move."),
+        ["preview.skipped"] = ("Taşınmayacak: {0}", "Not moved: {0}"),
+        ["preview.back"] = ("Geri", "Back"),
+        ["history.title"] = ("Geçmiş", "History"),
+        ["history.subtitle"] = ("Her düzenleme ayrı ayrı geri alınabilir.", "Each cleanup can be undone on its own."),
+        ["history.empty"] = ("Henüz bir düzenleme yok.", "No cleanups yet."),
+        ["history.item"] = ("{0}  ·  {1} dosya", "{0}  ·  {1} files"),
+        ["history.item.one"] = ("{0}  ·  {1} dosya", "{0}  ·  {1} file"),
+        ["history.undone"] = ("Geri alındı", "Undone"),
+        ["history.undo"] = ("Geri al", "Undo"),
+        ["rules.opened"] = ("Kurallar dosyası açıldı. Değiştirip kaydedin, sonra TidyDesk'e dönün. Dosyayı silerseniz yerleşik kurallar kullanılır.",
+                            "The rules file is open. Edit and save it, then come back to TidyDesk. Delete the file to go back to the built-in rules."),
+        ["rules.openFailed"] = ("Kurallar dosyası açılamadı: {0}", "Couldn't open the rules file: {0}"),
+
         // Mac app
+        ["mac.about"] = ("TidyDesk Hakkında", "About TidyDesk"),
+        ["about.version"] = ("Sürüm {0}", "Version {0}"),
+        ["about.text"] = ("Masaüstü, Belgeler ve İndirilenler'deki dosyaları türlerine göre klasörlere ayırır. Hiçbir dosyayı silmez, internete bağlanmaz.",
+                          "Sorts the files in your Desktop, Documents and Downloads into folders by type. Never deletes a file, never goes online."),
+        ["about.license"] = ("Ücretsiz ve açık kaynak, MIT lisansı.\ngithub.com/odmcc/TidyDesk", "Free and open source, MIT license.\ngithub.com/odmcc/TidyDesk"),
         ["mac.showInFinder"] = ("Finder'da göster", "Show in Finder"),
         ["mac.permission"] = ("macOS bu klasörü okumaya izin vermedi. Sistem Ayarları → Gizlilik ve Güvenlik → Dosyalar ve Klasörler bölümünden TidyDesk'e izin verin, sonra uygulamayı yeniden açın.",
                               "macOS didn't allow reading this folder. Allow TidyDesk in System Settings → Privacy & Security → Files and Folders, then reopen the app."),
@@ -100,6 +136,11 @@ internal static class Strings
          "Kullanıcı klasörünün kendisi seçilemez; Masaüstü, Belgeler gibi içindeki bir klasörü seçin."),
         ("On the C: drive, only folders inside your own user folder can be used.",
          "C: sürücüsünde yalnızca kendi kullanıcı klasörünüzdeki klasörler düzenlenebilir."),
+        ("Your rules file has an error, so the built-in rules are used:", "Kurallar dosyanızda hata var, bu yüzden yerleşik kurallar kullanılıyor:"),
+        ("subfolders are organized.", "alt klasör düzenlenir."),
+        (": only the first", ": yalnızca ilk"),
+        ("Open in Office", "Office'te açık"),
+        ("Open in another program", "Başka bir programda açık"),
         ("Folder not found.", "Klasör bulunamadı."),
         ("Folder not found:", "Klasör bulunamadı:"),
         ("Couldn't read folder:", "Klasör okunamadı:"),
@@ -121,8 +162,16 @@ internal static class Strings
             return message;
         foreach (var (en, tr) in CoreMessages)
             message = message.Replace(en, tr);
-        return message;
+        return NewerThan().Replace(message, "$1 günden yeni");
     }
+
+    [GeneratedRegex(@"Newer than (\d+) days")]
+    private static partial Regex NewerThan();
+
+    /// <summary>Date and time of a run, like "15 Kasım 2026 18:45" or "Nov 15, 2026 6:45 PM".</summary>
+    public static string Date(DateTime time) =>
+        Language == "en" ? time.ToString("MMM d, yyyy h:mm tt", CultureInfo.GetCultureInfo("en-US"))
+                         : time.ToString("d MMMM yyyy HH:mm", CultureInfo.GetCultureInfo("tr-TR"));
 
     /// <summary>"A", "A and B", "A, B and C" (Turkish: "ve").</summary>
     public static string JoinList(IReadOnlyList<string> names) =>

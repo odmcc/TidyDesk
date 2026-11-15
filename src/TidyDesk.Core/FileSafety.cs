@@ -1,4 +1,41 @@
+using System.ComponentModel;
+using System.Diagnostics;
+
 namespace TidyDesk.Core;
+
+/// <summary>
+/// macOS doesn't lock open files, so a file open in Preview or a video player would pass <see cref="FileSafety.IsInUse"/>.
+/// There, one "lsof" call lists every file the user's programs have open; it runs at most once per scan or run.
+/// Elsewhere this is always empty.
+/// </summary>
+internal sealed class OpenFiles
+{
+    private HashSet<string>? _paths;
+    private readonly Dictionary<string, string> _realDirs = new(StringComparer.OrdinalIgnoreCase);
+
+    public bool Contains(FileInfo file)
+    {
+        if (!OperatingSystem.IsMacOS())
+            return false;
+        _paths ??= FileSafety.ListOpenFiles();
+        if (_paths.Count == 0)
+            return false;
+        var dir = file.DirectoryName!;
+        if (!_realDirs.TryGetValue(dir, out var realDir))
+        {
+            try
+            {
+                realDir = PathGuard.RealPath(dir); // lsof reports real paths (/private/var, not /var)
+            }
+            catch (IOException)
+            {
+                realDir = dir;
+            }
+            _realDirs[dir] = realDir;
+        }
+        return _paths.Contains(file.FullName) || _paths.Contains(Path.Combine(realDir, file.Name));
+    }
+}
 
 internal static class FileSafety
 {
@@ -32,6 +69,44 @@ internal static class FileSafety
             return true;
         }
     }
+
+    /// <summary>Full paths of files open in the user's programs (macOS, via lsof). Empty if lsof can't be run.</summary>
+    public static HashSet<string> ListOpenFiles()
+    {
+        try
+        {
+            var start = new ProcessStartInfo("/usr/sbin/lsof")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+            };
+            foreach (var arg in new[] { "-n", "-P", "-w", "-F", "n" })
+                start.ArgumentList.Add(arg);
+            using var process = Process.Start(start);
+            if (process is null)
+                return [];
+            var output = process.StandardOutput.ReadToEndAsync();
+            _ = process.StandardError.ReadToEndAsync();
+            if (!process.WaitForExit(10_000))
+            {
+                process.Kill();
+                return [];
+            }
+            return ParseLsof(output.Result);
+        }
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or IOException or AggregateException)
+        {
+            return [];
+        }
+    }
+
+    /// <summary>lsof -F n prints one field per line; file names start with "n".</summary>
+    internal static HashSet<string> ParseLsof(string output) =>
+        output.Split('\n')
+            .Where(line => line.Length > 2 && line[0] == 'n' && line[1] == '/')
+            .Select(line => line[1..].TrimEnd('\r'))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Office leaves an owner file starting with "~$" next to an open document.</summary>
     public static bool HasOfficeOwnerFile(FileInfo file)

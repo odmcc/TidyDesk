@@ -16,6 +16,8 @@ public sealed class AppPaths
     public string LogDir => Path.Combine(DataDir, "logs");
     public string JournalDir => Path.Combine(DataDir, "history");
     public string SettingsFile => Path.Combine(DataDir, "settings.json");
+    /// <summary>The user's own category rules; when it exists it replaces the built-in rules.</summary>
+    public string RulesFile => Path.Combine(DataDir, "rules.json");
 
     public static AppPaths Portable()
     {

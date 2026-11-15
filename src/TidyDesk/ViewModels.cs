@@ -66,6 +66,7 @@ internal sealed class FolderItem(string name, string path, string glyph, bool is
 {
     private bool _isChecked;
     private string _badge = "";
+    private bool _includeSubfolders;
 
     public string Name { get; } = name;
     public string Path { get; } = path;
@@ -76,11 +77,19 @@ internal sealed class FolderItem(string name, string path, string glyph, bool is
     public bool IsAllowed => Problem is null;
     public string Tooltip => Problem ?? Path;
     public bool IsChecked { get => _isChecked; set => Set(ref _isChecked, value && IsAllowed); }
+    /// <summary>Organize subfolders too, each in its own place (only for folders added by hand).</summary>
+    public bool IncludeSubfolders { get => _includeSubfolders; set => Set(ref _includeSubfolders, value && IsCustom); }
     /// <summary>Such as "12 files" or "Tidy".</summary>
     public string Badge { get => _badge; set => Set(ref _badge, value); }
 }
 
 internal sealed record ChipItem(string Text, string Glyph, Brush Accent, Brush Tint);
+
+/// <summary>One line of the preview: a file and where it goes (or why it stays).</summary>
+internal sealed record PreviewItem(string Title, string Detail, string Glyph, Brush Accent, Brush Tint);
+
+/// <summary>One earlier cleanup on the history screen.</summary>
+internal sealed record HistoryItem(string RunId, string Text, bool CanUndo, string Status);
 
 /// <summary>The "Add folder" card after the folder cards.</summary>
 internal sealed record AddFolderTile;
