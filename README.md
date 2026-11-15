@@ -27,7 +27,7 @@ Windows may show a SmartScreen warning the first time ("Windows protected your P
 ## How it works
 
 1. Run `TidyDesk.exe`.
-2. Pick the folders to tidy: Desktop, Documents and Downloads are ready to go. Use **Add folder** to add any other folder. Each card shows how many files will be organized.
+2. Pick the folders to tidy: Desktop, Documents and Downloads are ready to go. Use **Add folder** to add any other folder, or a whole USB stick. Each card shows how many files will be organized.
 3. Press the big button.
 4. Open the folder to see the result, or press **Undo** to put everything back.
 
@@ -54,7 +54,7 @@ Desktop\
 | | |
 |---|---|
 | **No network access** | The app contains no networking code: no telemetry, no updates, no uploads. To recognize a file type it reads only the first few bytes, and that data never leaves your computer. |
-| **No system folders** | Windows, Program Files, ProgramData, AppData, drive roots (`C:\`), the Recycle Bin, other users' folders and network paths cannot be selected. On the system drive, only folders inside your own user profile are allowed. This is checked both when you pick a folder and again right before files are moved. |
+| **No system folders** | Windows, Program Files, ProgramData, AppData, the Recycle Bin, other users' folders and network paths cannot be selected. On the system drive (`C:`), only folders inside your own user profile are allowed. Other disks and USB sticks can be picked as a whole (`D:\`, `E:\`) or by folder. This is checked both when you pick a folder and again right before files are moved. |
 | **Never deletes** | Files are only moved, never deleted. |
 | **Top level only** | Only files directly inside the selected folder are touched; subfolders are not scanned. |
 | **You decide** | Nothing runs in the background or on a schedule. Files move only when you press the button. |

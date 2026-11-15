@@ -55,6 +55,32 @@ public sealed class PathGuardTests
         Assert.NotNull(_guard.Check(profile + "2"));
         Assert.NotNull(_guard.Check(Path.Combine(profile, "Desktop", "..", "AppData", "Roaming")));
     }
+
+    [Fact]
+    public void Whole_non_system_drive_is_allowed()
+    {
+        // A subst drive stands in for a second disk or a USB stick (it reports as a fixed drive).
+        var letter = "ZYXWVUTSRQPONMLKJIHG".Select(c => $"{c}:").First(d => !Directory.Exists(d + @"\"));
+        var target = Directory.CreateTempSubdirectory("TidyDeskDrive").FullName;
+        try
+        {
+            Subst($"{letter} \"{target}\"");
+            Assert.Null(_guard.Check(letter + @"\"));
+            Assert.Null(_guard.Check(Path.Combine(letter + @"\", ".")));
+        }
+        finally
+        {
+            Subst($"{letter} /d");
+            Directory.Delete(target);
+        }
+    }
+
+    private static void Subst(string args)
+    {
+        using var p = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("subst", args) { CreateNoWindow = true })!;
+        p.WaitForExit();
+        Assert.Equal(0, p.ExitCode);
+    }
 }
 
 public sealed class ContentSnifferTests : IDisposable

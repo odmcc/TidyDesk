@@ -19,7 +19,11 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - run: dotnet test --nologo
-      - run: powershell -ExecutionPolicy Bypass -File scripts\publish.ps1
+      - name: Build the exe (version from the tag)
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart("v")
+          powershell -ExecutionPolicy Bypass -File scripts\publish.ps1 -Version $version
 
       - id: upload
         uses: actions/upload-artifact@v4

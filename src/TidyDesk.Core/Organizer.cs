@@ -29,9 +29,11 @@ public sealed class OrganizeResult
 /// When a <paramref name="guard"/> is given, system folders and disallowed paths are rejected.
 /// </summary>
 public sealed class Organizer(RuleSet rules, Func<string, string?> folderResolver, UndoJournal journal, ILog log,
-    Func<DateTime>? clock = null, PathGuard? guard = null)
+    Func<DateTime>? clock = null, PathGuard? guard = null, string? appExe = null)
 {
     private readonly Func<DateTime> _now = clock ?? (() => DateTime.Now);
+    // A running exe isn't locked against moving, and the app may run from the folder it tidies (a USB stick).
+    private readonly string? _appExe = appExe ?? Environment.ProcessPath;
 
     /// <summary>Dry run: works out what would happen without touching any file.</summary>
     public OrganizePlan CreatePlan()
@@ -194,6 +196,8 @@ public sealed class Organizer(RuleSet rules, Func<string, string?> folderResolve
 
     private bool IsExcluded(FileInfo file)
     {
+        if (string.Equals(file.FullName, _appExe, StringComparison.OrdinalIgnoreCase))
+            return true;
         if (rules.SkipHiddenAndSystem && (file.Attributes & (FileAttributes.Hidden | FileAttributes.System)) != 0)
             return true;
         if (rules.ExcludeExtensions.Contains(file.Extension.ToLowerInvariant()))

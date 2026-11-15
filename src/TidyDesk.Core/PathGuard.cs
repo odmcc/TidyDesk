@@ -2,8 +2,9 @@ namespace TidyDesk.Core;
 
 /// <summary>
 /// Checks whether a selected folder is safe to organize. Windows, Program Files, ProgramData, AppData,
-/// drive roots, network paths, the Recycle Bin and other users' profiles are never touched.
-/// On the system drive (C:) only folders inside the signed-in user's profile are allowed.
+/// network paths, the Recycle Bin and other users' profiles are never touched.
+/// On the system drive (C:) only folders inside the signed-in user's profile are allowed; other local disks
+/// and USB sticks can be used whole (D:\, E:\) or by folder.
 /// </summary>
 public sealed class PathGuard
 {
@@ -61,7 +62,9 @@ public sealed class PathGuard
 
         if (full.StartsWith(@"\\", StringComparison.Ordinal) && !_networkRoots.Any(r => IsSameOrInside(full, r)))
             return "Network folders can't be used; choose a folder on this PC.";
-        if (string.Equals(Path.GetPathRoot(full), full, StringComparison.OrdinalIgnoreCase))
+        // A whole local disk or USB stick is fine; C:\ is caught by the system-drive rule below.
+        var isRoot = string.Equals(Path.GetPathRoot(full), full, StringComparison.OrdinalIgnoreCase);
+        if (isRoot && (full.StartsWith(@"\\", StringComparison.Ordinal) || new DriveInfo(full).DriveType is not (DriveType.Fixed or DriveType.Removable)))
             return "A whole drive can't be used; choose a folder inside it.";
         if (full.Split(Path.DirectorySeparatorChar).Any(n =>
                 n.Equals("$Recycle.Bin", StringComparison.OrdinalIgnoreCase) ||
@@ -83,7 +86,8 @@ public sealed class PathGuard
 
         // A junction or symlink inside the profile can point at a system folder; check where it really leads.
         // Other reparse points (OneDrive) return null here and are left alone.
-        if (Directory.ResolveLinkTarget(full, returnFinalTarget: true) is { } target)
+        // A drive root can't be a link (and asking throws).
+        if (!isRoot && Directory.ResolveLinkTarget(full, returnFinalTarget: true) is { } target)
             return Check(target.FullName) is null ? null : "This folder is a link to a folder that can't be used.";
         return null;
     }

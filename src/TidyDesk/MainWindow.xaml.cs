@@ -86,7 +86,7 @@ public partial class MainWindow : Window
         foreach (var path in _settings.CustomFolders.Distinct(StringComparer.OrdinalIgnoreCase))
         {
             if (!_folders.Any(f => SamePath(f.Path, path)))
-                _folders.Add(new FolderItem(System.IO.Path.GetFileName(path), path, "", isCustom: true, Problem(path)));
+                _folders.Add(new FolderItem(DisplayName(path), path, "", isCustom: true, Problem(path)));
         }
 
         // Desktop and Downloads are selected on first launch; after that the user's choice is remembered.
@@ -116,7 +116,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            _folders.Add(new FolderItem(System.IO.Path.GetFileName(path), path, "", isCustom: true, problem: null) { IsChecked = true });
+            _folders.Add(new FolderItem(DisplayName(path), path, "", isCustom: true, problem: null) { IsChecked = true });
             _settings.CustomFolders.Add(path);
         }
         await SelectionChangedAsync();
@@ -506,7 +506,25 @@ public partial class MainWindow : Window
     // ================= Helpers =================
 
     private string FolderName(string path) =>
-        _folders.FirstOrDefault(f => SamePath(f.Path, path))?.Name ?? System.IO.Path.GetFileName(path);
+        _folders.FirstOrDefault(f => SamePath(f.Path, path))?.Name ?? DisplayName(path);
+
+    /// <summary>Folder name, or for a whole drive its label like Explorer shows it: "USB (E:)".</summary>
+    private static string DisplayName(string path)
+    {
+        if (System.IO.Path.GetFileName(path) is { Length: > 0 } name)
+            return name;
+        var letter = path.TrimEnd('\\');
+        try
+        {
+            if (new DriveInfo(path).VolumeLabel is { Length: > 0 } label)
+                return $"{label} ({letter})";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            // Drive not ready (card reader without a card) or not a local drive: the letter alone is enough.
+        }
+        return letter;
+    }
 
     private static bool SamePath(string a, string b) =>
         string.Equals(System.IO.Path.TrimEndingDirectorySeparator(a), System.IO.Path.TrimEndingDirectorySeparator(b), StringComparison.OrdinalIgnoreCase);

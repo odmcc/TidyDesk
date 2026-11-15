@@ -1,8 +1,9 @@
 ﻿# Builds the portable single-file TidyDesk.exe. .NET does not need to be installed on the target PC.
-# Usage:  powershell -ExecutionPolicy Bypass -File scripts\publish.ps1
+# Usage:  powershell -ExecutionPolicy Bypass -File scripts\publish.ps1 [-Version 3.2.0]
 param(
     [string]$Runtime = "win-x64",
-    [string]$Output = (Join-Path $PSScriptRoot "..\dist")
+    [string]$Output = (Join-Path $PSScriptRoot "..\dist"),
+    [string]$Version # the release workflow passes the tag; empty keeps <Version> from the csproj
 )
 $ErrorActionPreference = "Stop"
 
@@ -12,7 +13,9 @@ if (Test-Path $userDotnet) { $dotnet = $userDotnet }
 if (-not $dotnet) { throw ".NET SDK not found. See 'Build from source' in the README." }
 
 $project = Join-Path $PSScriptRoot "..\src\TidyDesk\TidyDesk.csproj"
-& $dotnet publish $project -c Release -r $Runtime --self-contained true `
+$versionArg = @()
+if ($Version) { $versionArg += "/p:Version=$Version" } # "/p:" form: Windows PowerShell splits a splatted "-p:..."
+& $dotnet publish $project -c Release -r $Runtime --self-contained true @versionArg `
     -p:PublishSingleFile=true `
     -p:IncludeNativeLibrariesForSelfExtract=true `
     -p:EnableCompressionInSingleFile=true `

@@ -214,6 +214,18 @@ public sealed class OrganizerTests : IDisposable
     }
 
     [Fact]
+    public void The_apps_own_exe_is_never_moved()
+    {
+        var self = _box.CreateFile(_box.Desktop, "TidyDesk.exe");
+        _box.CreateFile(_box.Desktop, "setup.exe");
+        var organizer = new Organizer(_box.DefaultRules(), _box.Resolve, _box.CreateJournal(), NullLog.Instance, () => TestSandbox.Now, appExe: self);
+
+        var move = Assert.Single(organizer.CreatePlan().Moves);
+
+        Assert.EndsWith("setup.exe", move.SourcePath);
+    }
+
+    [Fact]
     public void Execute_rechecks_the_folder_and_moves_nothing_when_it_is_no_longer_allowed()
     {
         var file = _box.CreateFile(_box.Desktop, "report.docx");

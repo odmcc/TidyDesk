@@ -357,7 +357,7 @@ footer nav { display: flex; gap: 22px; flex-wrap: wrap; }
   <div class="wrap two">
     <div>
       <h2 data-k="gd.h">Yanlış klasörü seçemezsin.</h2>
-      <p style="color:var(--ink-soft);max-width:46ch" data-k="gd.t">Bir klasörü eklerken ve dosyaları taşımadan hemen önce TidyDesk klasörü denetler. Windows'un ve programların klasörleri, sürücü kökleri ve ağ klasörleri baştan reddedilir. Sistem sürücüsünde yalnızca kendi kullanıcı klasörünün içi kabul edilir.</p>
+      <p style="color:var(--ink-soft);max-width:46ch" data-k="gd.t">Bir klasörü eklerken ve dosyaları taşımadan hemen önce TidyDesk klasörü denetler. Windows'un ve programların klasörleri ve ağ klasörleri baştan reddedilir. Sistem sürücüsünde yalnızca kendi kullanıcı klasörünün içi kabul edilir; USB bellek ya da ikinci bir disk ise tamamıyla seçilebilir.</p>
     </div>
     <ul class="guard" id="guard"></ul>
   </div>
@@ -415,7 +415,7 @@ const EN = {
   'la.h': 'What does it leave alone?',
   'la.1': 'Shortcuts and folders. It never goes into subfolders.', 'la.2': 'Hidden and system files, <code>desktop.ini</code>.',
   'la.3': 'Unfinished downloads (<code>.crdownload</code>, <code>.part</code>).', 'la.4': 'Files that are open in Word, Excel or another program.',
-  'gd.h': 'You can\'t pick the wrong folder.', 'gd.t': 'TidyDesk checks a folder when you add it and again right before files move. Windows and program folders, drive roots and network folders are refused outright. On the system drive only the inside of your own user folder is accepted.',
+  'gd.h': 'You can\'t pick the wrong folder.', 'gd.t': 'TidyDesk checks a folder when you add it and again right before files move. Windows and program folders and network folders are refused outright. On the system drive only the inside of your own user folder is accepted; a USB stick or a second disk can be picked as a whole.',
   'dl.h': 'Download. Two options.', 'dl.sub': 'Both are the same program. Pick the one that suits you.',
   'dl1.h': 'Portable', 'dl1.t': '<code>TidyDesk.exe</code>: just double-click it. Runs from a USB stick and leaves no trace on the PC. To remove it, delete the file.', 'dl1.b': 'Download TidyDesk.exe',
   'dl2.h': 'Installer', 'dl2.t': '<code>TidyDesk-Setup.exe</code>: adds TidyDesk to the Start menu and to Installed apps. No administrator rights needed.', 'dl2.b': 'Download the installer',
@@ -443,7 +443,8 @@ const GUARD = [
   ['D:\\Fotoğraflar', 1, { tr: 'Sistem sürücüsü dışındaki bir klasör.', en: 'A folder outside the system drive.' }],
   ['C:\\Windows\\System32', 0, { tr: 'Sistem ve program klasörleri kullanılamaz.', en: 'System and program folders can\'t be used.' }],
   ['C:\\Users\\sen\\AppData\\Roaming', 0, { tr: 'Sistem ve program klasörleri kullanılamaz.', en: 'System and program folders can\'t be used.' }],
-  ['C:\\', 0, { tr: 'Bir sürücünün tamamı kullanılamaz.', en: 'A whole drive can\'t be used.' }],
+  ['E:\\', 1, { tr: 'USB bellek ya da ikinci disk, tamamıyla.', en: 'A USB stick or second disk, as a whole.' }],
+  ['C:\\', 0, { tr: 'C: sürücüsünde yalnızca kendi kullanıcı klasörünün içi kullanılabilir.', en: 'On the C: drive only folders inside your own user folder can be used.' }],
   ['C:\\Users\\sen', 0, { tr: 'Tüm kullanıcı klasörü kullanılamaz; Masaüstü gibi içindeki bir klasör seç.', en: 'Your whole user folder can\'t be used; pick a folder inside it.' }],
   ['\\\\sunucu\\paylasim', 0, { tr: 'Ağ klasörleri kullanılamaz.', en: 'Network folders can\'t be used.' }]
 ];
