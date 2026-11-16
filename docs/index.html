@@ -16,224 +16,285 @@
 <link rel="icon" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@400;500&display=swap">
+<script>document.documentElement.classList.add('js');</script>
 <style>
 :root {
-  --paper: #EAEFF6;
-  --ink: #0F1B33;
-  --ink-soft: #46546F;
-  --line: #C9D3E3;
-  --blue: #2A6BE4;
-  --blue-deep: #1B4FB8;
-  --ok: #178A4B;
-  --no: #C73A3A;
+  --bg: #FFFFFF;
+  --panel: #F3F4F8;
+  --line: #E4E5EC;
+  --ink: #0B0910;
+  --ink-soft: #6A6577;
+  --muted: #C9C7D1;
+  --indigo: #4B3FA8;
+  --mauve: #9A6F86;
+  --ok: #2F8F6B;
+  --ok-bg: #DDF2E8;
+  --no: #C2455E;
+  --no-bg: #FBE3E8;
+  --grad: linear-gradient(135deg, #EDCBD4 0%, #DDD5F3 55%, #CCD5FA 100%);
+  --shadow: 0 1px 2px rgba(11,9,16,.04), 0 18px 40px -18px rgba(50,34,73,.28);
   --c-pdf: #D64545;
   --c-sheet: #1F9D55;
   --c-doc: #2A6BE4;
   --c-img: #8B5CC8;
   --c-arc: #C98A00;
-  --font: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --font: "Geist", "Segoe UI", system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, Consolas, monospace;
+  color-scheme: light;
 }
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 80px; }
-body { margin: 0; background: var(--paper); color: var(--ink); font: 400 1.0625rem/1.6 var(--font); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1.0625rem/1.6 var(--font); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 a { color: inherit; }
-:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
+:focus-visible { outline: 3px solid var(--indigo); outline-offset: 3px; border-radius: 8px; }
 .wrap { width: min(1200px, 100% - 32px); margin-inline: auto; }
 p { margin: 0 0 1em; }
 code { font: 500 .85em var(--mono); }
+h1, h2, h3 { font-weight: 500; letter-spacing: -.035em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.6rem, 6.4vw, 5.2rem); line-height: 1; }
+h2 { font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.04; margin-bottom: 18px; }
+h3 { font-size: 1.25rem; letter-spacing: -.02em; line-height: 1.25; margin-bottom: 8px; }
+.soft { color: var(--ink-soft); }
 
-/* ---------- sticky header ---------- */
-.bar { position: sticky; top: 0; z-index: 50; transition: background .25s, box-shadow .25s; }
-.bar.scrolled { background: rgba(234,239,246,.82); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 1px 0 var(--line); }
-.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; }
-.brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.25rem; letter-spacing: -.01em; text-decoration: none; }
-.brand img { width: 36px; height: 36px; }
-.top-actions { display: flex; align-items: center; gap: 12px; }
-.lang { display: inline-flex; padding: 3px; background: #fff; border: 1px solid var(--line); border-radius: 999px; }
-.lang button { font: 600 .8125rem var(--font); border: 0; background: none; color: var(--ink-soft); padding: 6px 12px; border-radius: 999px; cursor: pointer; }
-.lang button[aria-pressed="true"] { background: var(--ink); color: #fff; }
-
+/* ---------- buttons ---------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-  font: 600 1rem var(--font); text-decoration: none; cursor: pointer;
-  padding: 14px 26px; border-radius: 999px; border: 0;
-  background: linear-gradient(180deg, #4C8BF5, var(--blue-deep)); color: #fff;
-  box-shadow: 0 10px 28px -10px rgba(42,107,228,.7), inset 0 1px 0 rgba(255,255,255,.35);
-  transition: transform .15s, box-shadow .15s;
+  font: 500 .9875rem var(--font); text-decoration: none; cursor: pointer;
+  padding: 13px 22px; border-radius: 999px; border: 0;
+  background: var(--ink); color: #fff;
+  box-shadow: 0 10px 24px -12px rgba(11,9,16,.6);
+  transition: transform .15s, box-shadow .15s, background .15s;
 }
-.btn:hover { transform: translateY(-1px); box-shadow: 0 14px 30px -10px rgba(42,107,228,.8), inset 0 1px 0 rgba(255,255,255,.35); }
+.btn:hover { transform: translateY(-1px); box-shadow: 0 14px 28px -12px rgba(11,9,16,.65); }
 .btn.pressed { transform: scale(.95); }
-.btn.quiet { background: #fff; color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
+.btn.light { background: #fff; color: var(--ink); box-shadow: 0 0 0 1px var(--line), var(--shadow); }
 .btn.small { padding: 9px 18px; font-size: .9375rem; }
-.btn.on-dark { background: #fff; color: var(--ink); box-shadow: none; }
+.btn svg { width: 18px; height: 18px; flex: none; }
+
+/* ---------- header ---------- */
+.bar { position: sticky; top: 0; z-index: 50; transition: background .25s, box-shadow .25s; }
+.bar.scrolled { background: rgba(255,255,255,.82); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 1px 0 var(--line); }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1.2rem; letter-spacing: -.03em; text-decoration: none; }
+.brand img { width: 32px; height: 32px; }
+.nav { display: flex; gap: 28px; font-size: .9375rem; color: var(--ink-soft); }
+.nav a { text-decoration: none; transition: color .15s; }
+.nav a:hover { color: var(--ink); }
+.top-actions { display: flex; align-items: center; gap: 12px; }
+.lang { display: inline-flex; padding: 3px; background: var(--panel); border-radius: 999px; }
+.lang button { font: 500 .8125rem var(--font); border: 0; background: none; color: var(--ink-soft); padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+.lang button[aria-pressed="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(11,9,16,.12); }
 
 /* ---------- hero ---------- */
-.hero-bg { position: absolute; inset: 0 0 auto 0; height: 980px; z-index: -1; pointer-events: none;
-  background:
-    radial-gradient(55% 45% at 82% 12%, rgba(76,139,245,.30), transparent 62%),
-    radial-gradient(40% 40% at 8% 78%, rgba(139,92,200,.16), transparent 62%); }
-.hero-bg::after { content: ""; position: absolute; inset: 0;
-  background-image: radial-gradient(rgba(15,27,51,.13) 1px, transparent 1.3px); background-size: 24px 24px;
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 80%); mask-image: linear-gradient(180deg, #000 0%, transparent 80%); }
-.hero { position: relative; display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.2fr); gap: clamp(32px, 5vw, 76px); align-items: center; padding: clamp(24px, 4vw, 56px) 0 clamp(64px, 8vw, 112px); }
-h1 { font-size: clamp(2.7rem, 6.2vw, 5.3rem); line-height: .98; letter-spacing: -.04em; font-weight: 700; margin: 0 0 24px; max-width: 11ch; }
-.lead { font-size: 1.1875rem; color: var(--ink-soft); max-width: 46ch; margin: 0 0 32px; }
-.cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
-.fine { font-size: .9375rem; color: var(--ink-soft); margin: 0; }
+.hero { position: relative; text-align: center; padding: clamp(40px, 7vw, 96px) 0 0; }
+.badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 8px; border-radius: 999px; background: var(--panel); font-size: .875rem; color: var(--ink-soft); margin-bottom: 28px; }
+.badge b { font-weight: 500; color: #fff; background: var(--indigo); border-radius: 999px; padding: 2px 9px; font-size: .78rem; }
+.hero h1 { max-width: 14ch; margin-inline: auto; }
+.lead { font-size: 1.1875rem; color: var(--ink-soft); max-width: 50ch; margin: 24px auto 34px; }
+.cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.fine { font-size: .875rem; color: var(--ink-soft); margin: 18px 0 0; }
+.fine a { text-underline-offset: 3px; }
 
-/* the demo is a tiny copy of the real app window */
+/* the demo is a tiny copy of the real app window, set on a soft gradient panel */
+.hero-panel { position: relative; margin-top: clamp(48px, 6vw, 80px); border-radius: 32px; background: var(--panel); padding: clamp(18px, 4vw, 56px); overflow: hidden; }
+.hero-panel::before, .hero-panel::after { content: ""; position: absolute; border-radius: 50%; filter: blur(50px); pointer-events: none; }
+.hero-panel::before { width: 46%; height: 70%; left: -8%; top: -18%; background: #EDCBD4; opacity: .8; }
+.hero-panel::after { width: 50%; height: 80%; right: -10%; bottom: -30%; background: #CCD5FA; opacity: .9; }
 .stage {
-  position: relative; display: flex; flex-direction: column; height: 580px; border-radius: 18px;
-  background: linear-gradient(180deg, #F9FBFE, #E6EDF7); border: 1px solid #B9C6DC;
-  box-shadow: 0 50px 80px -40px rgba(15,27,51,.55), 0 0 0 8px rgba(255,255,255,.35);
+  position: relative; z-index: 1; display: flex; flex-direction: column; height: 560px; max-width: 920px; margin-inline: auto; text-align: left;
+  border-radius: 20px; background: #FBFBFD; box-shadow: 0 0 0 1px rgba(11,9,16,.06), 0 50px 90px -40px rgba(50,34,73,.45);
 }
 .win-bar { display: flex; align-items: center; justify-content: space-between; height: 42px; padding: 0 14px; border-bottom: 1px solid var(--line); flex: none; }
-.win-title { display: flex; align-items: center; gap: 8px; font: 600 .8125rem var(--font); color: var(--ink-soft); }
+.win-title { display: flex; align-items: center; gap: 8px; font: 500 .8125rem var(--font); color: var(--ink-soft); }
 .win-title img { width: 16px; height: 16px; }
-.win-ctl { display: flex; gap: 18px; color: #7A88A3; font-size: .8rem; letter-spacing: 0; }
+.win-ctl { display: flex; gap: 18px; color: #9893A3; font-size: .8rem; }
 .desk { position: relative; flex: 1; min-height: 0; }
 .chip {
   position: absolute; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 6px 11px 6px 8px;
-  background: #fff; border: 1px solid var(--line); border-radius: 9px;
+  background: #fff; border: 1px solid var(--line); border-radius: 10px;
   font: 500 .78rem var(--mono); white-space: nowrap; color: var(--ink);
-  box-shadow: 0 6px 14px -8px rgba(15,27,51,.4);
+  box-shadow: 0 6px 14px -8px rgba(50,34,73,.35);
   transform: translate(0,0) rotate(var(--r)) scale(1);
   transition: transform .9s cubic-bezier(.55,0,.2,1), opacity .45s ease .45s;
   transition-delay: calc(var(--i) * 55ms), calc(var(--i) * 55ms + 420ms);
   will-change: transform;
 }
 .chip i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); flex: none; }
-.chip.stay { border-style: dashed; background: rgba(255,255,255,.65); box-shadow: none; transition: none; }
-.chip.stay i { background: #9AA7BD; }
-.chip.stay::after { content: attr(data-stay); position: absolute; left: 4px; top: calc(100% + 5px); font: 600 .7rem var(--font); color: var(--ink-soft); opacity: 0; transition: opacity .4s 1s; }
+.chip.stay { border-style: dashed; background: rgba(255,255,255,.6); box-shadow: none; transition: none; }
+.chip.stay i { background: #B5B1BF; }
+.chip.stay::after { content: attr(data-stay); position: absolute; left: 4px; top: calc(100% + 5px); font: 500 .7rem var(--font); color: var(--ink-soft); opacity: 0; transition: opacity .4s 1s; }
 .stage.is-tidy .chip.stay::after { opacity: 1; }
 .stage.is-tidy .chip:not(.stay) { transform: translate(var(--dx), var(--dy)) rotate(0deg) scale(.3); opacity: 0; }
 .stage:not(.is-tidy) .chip:not(.stay) { transition-delay: calc(var(--i) * 40ms), 0s; }
-
 .boxes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 14px 14px 0; flex: none; }
 .box {
   position: relative; height: 96px; border: 1px solid var(--line); border-radius: 4px 14px 14px 14px; min-width: 0;
   padding: 16px 10px 8px; display: flex; flex-direction: column; justify-content: space-between;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 13%, #fff), #fff 70%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 12%, #fff), #fff 70%);
   transition: transform .25s, box-shadow .25s;
 }
 .box::before { content: ""; position: absolute; left: -1px; top: -9px; width: 44%; height: 9px; background: var(--c); border-radius: 6px 6px 0 0; }
-.box b { font-size: .875rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.box b { font-size: .875rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .box output { font: 500 1.35rem var(--mono); color: var(--c); display: inline-block; transition: transform .3s; }
 .box output.tick { transform: scale(1.35); }
 .box.hit { transform: translateY(-4px); box-shadow: 0 14px 22px -14px var(--c); }
-
 .win-foot { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 16px 16px 18px; flex: none; }
 .status { margin: 0; color: var(--ink-soft); font-size: .9375rem; flex: 1; min-width: 180px; }
-.cursor { position: absolute; left: 0; top: 0; z-index: 9; width: 26px; height: 26px; pointer-events: none; opacity: 0; filter: drop-shadow(0 3px 4px rgba(15,27,51,.35)); }
+.cursor { position: absolute; left: 0; top: 0; z-index: 9; width: 26px; height: 26px; pointer-events: none; opacity: 0; filter: drop-shadow(0 3px 4px rgba(11,9,16,.35)); }
 
-/* ---------- promises ---------- */
-.promises { display: grid; grid-template-columns: repeat(3, 1fr); border-block: 1px solid var(--line); background: rgba(255,255,255,.4); }
-.promises > div { padding: 44px clamp(16px, 3vw, 40px) 48px; }
-.promises > div + div { border-left: 1px solid var(--line); }
-.ico { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; color: var(--blue); background: #fff; border: 1px solid var(--line); margin-bottom: 20px; }
-.ico svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-h2 { font-size: clamp(2rem, 3.8vw, 3.1rem); line-height: 1.05; letter-spacing: -.032em; font-weight: 700; margin: 0 0 20px; }
-h1, h2 { text-wrap: balance; }
-h3 { font-size: 1.375rem; letter-spacing: -.015em; line-height: 1.2; margin: 0 0 10px; font-weight: 700; }
-.promises p, .steps p { color: var(--ink-soft); margin: 0; max-width: 40ch; }
+/* ---------- statement: words fill with colour as you scroll ---------- */
+.statement-wrap { padding: clamp(96px, 14vw, 180px) 0; }
+.statement { font-size: clamp(1.9rem, 4.4vw, 3.6rem); line-height: 1.12; letter-spacing: -.035em; font-weight: 500; text-align: center; max-width: 22ch; margin: 0 auto; text-wrap: balance; }
+.statement span { color: var(--muted); transition: color .25s; }
+.statement span.on { color: var(--w); }
 
-.section { padding: clamp(72px, 9vw, 128px) 0; }
-.section.tight-top { padding-top: 0; }
-.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(32px, 6vw, 88px); align-items: center; }
+/* ---------- trust numbers ---------- */
+.trust-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px 64px; align-items: end; margin-bottom: 48px; }
+.trust-head p { color: var(--ink-soft); max-width: 44ch; margin: 0; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 40px; }
+.stats > div { border-top: 1px solid var(--line); padding-top: 26px; }
+.num { display: flex; align-items: baseline; gap: 8px; font-size: clamp(3.4rem, 7vw, 5.6rem); line-height: 1; letter-spacing: -.05em; font-weight: 500; margin-bottom: 22px;
+  background: linear-gradient(120deg, var(--mauve), var(--indigo)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.num small { font-size: .3em; letter-spacing: -.02em; }
+.stats p { color: var(--ink-soft); margin: 0; max-width: 38ch; font-size: 1rem; }
 
-/* ---------- steps ---------- */
-.steps { list-style: none; padding: 0; margin: 28px 0 0; counter-reset: s; }
-.steps li { counter-increment: s; display: grid; grid-template-columns: 52px 1fr; gap: 6px 18px; padding: 22px 0; border-top: 1px solid var(--line); }
-.steps li::before { content: counter(s); grid-row: span 2; font: 500 1.9rem/1 var(--mono); color: var(--blue); }
-.shots { position: relative; padding-bottom: 50%; perspective: 1400px; }
-.shots img { display: block; width: 64%; height: auto; border-radius: 18px; box-shadow: 0 40px 70px -32px rgba(15,27,51,.7); transform: rotateY(var(--ry, 0deg)) rotateX(var(--rx, 0deg)); transition: transform .25s ease-out; }
-.shots img + img { position: absolute; right: 0; bottom: 0; transform: rotateY(calc(var(--ry, 0deg) * 1.6)) rotateX(calc(var(--rx, 0deg) * 1.6)); }
+/* ---------- feature panels ---------- */
+.features { display: grid; gap: 20px; padding: clamp(96px, 12vw, 150px) 0 0; }
+.panel { position: relative; display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: clamp(28px, 5vw, 72px); align-items: center;
+  background: var(--panel); border-radius: 32px; padding: clamp(28px, 5vw, 72px); overflow: hidden; }
+.panel .eyebrow { display: inline-block; font: 500 .8125rem var(--mono); color: var(--indigo); margin-bottom: 18px; }
+.panel h2 { font-size: clamp(1.9rem, 3.4vw, 2.75rem); }
+.panel > div > p { color: var(--ink-soft); max-width: 46ch; }
+.float { background: #fff; border-radius: 18px; box-shadow: var(--shadow); }
+.grad { background: var(--grad); border-radius: 22px; padding: clamp(18px, 3vw, 36px); }
 
-/* ---------- content sniffing ---------- */
-.sniff-card { background: var(--ink); color: #fff; border-radius: 20px; padding: 26px; box-shadow: 0 40px 70px -40px rgba(15,27,51,.8); }
-.tabs { display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
-.tabs button { font: 500 .8125rem var(--mono); color: #B6C2D9; background: transparent; border: 1px solid #2D3C5C; border-radius: 999px; padding: 7px 14px; cursor: pointer; }
-.tabs button[aria-pressed="true"] { background: #fff; color: var(--ink); border-color: #fff; }
-.fname { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font: 500 1.15rem var(--mono); margin-bottom: 18px; }
-.fname small { font: 600 .75rem var(--font); color: #F2B8B8; background: rgba(214,69,69,.2); padding: 3px 9px; border-radius: 999px; }
-.hex { display: flex; flex-wrap: wrap; gap: 6px; font: 500 1rem var(--mono); margin-bottom: 20px; }
-.hex span { padding: 5px 7px; border-radius: 6px; background: #17264A; color: #8FA0C2; }
-.hex span.sig { background: var(--blue); color: #fff; animation: glow 1.6s ease-in-out infinite alternate; }
-@keyframes glow { from { box-shadow: 0 0 0 0 rgba(76,139,245,.0); } to { box-shadow: 0 0 18px 2px rgba(76,139,245,.7); } }
-.verdict { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 18px; border-top: 1px solid #2D3C5C; color: #B6C2D9; font-size: .9375rem; }
-.verdict b { color: #fff; font-size: 1.0625rem; }
-.verdict .tag { display: inline-flex; align-items: center; gap: 8px; background: #fff; color: var(--ink); font-weight: 700; padding: 7px 14px; border-radius: 10px; }
+.steps { list-style: none; padding: 0; margin: 26px 0 0; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 40px 1fr; gap: 4px 14px; padding: 18px 0; border-top: 1px solid var(--line); }
+.steps li::before { content: counter(s, decimal-leading-zero); grid-row: span 2; font: 500 .875rem/1.9 var(--mono); color: var(--indigo); }
+.steps h3 { font-size: 1.125rem; margin: 0; }
+.steps p { color: var(--ink-soft); margin: 0; font-size: .9875rem; }
+.shots { position: relative; padding-bottom: 72%; perspective: 1400px; }
+.shots img { position: absolute; display: block; width: 68%; height: auto; border-radius: 16px; box-shadow: 0 40px 70px -32px rgba(50,34,73,.6); transform: rotateY(var(--ry, 0deg)) rotateX(var(--rx, 0deg)); transition: transform .25s ease-out; left: 0; top: 0; }
+.shots img + img { left: auto; top: auto; right: 0; bottom: 0; transform: rotateY(calc(var(--ry, 0deg) * 1.6)) rotateX(calc(var(--rx, 0deg) * 1.6)); }
+
+.sniff-card { padding: 22px; }
+.tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.tabs button { font: 500 .8125rem var(--mono); color: var(--ink-soft); background: var(--panel); border: 0; border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+.tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.fname { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font: 500 1.1rem var(--mono); margin-bottom: 16px; }
+.fname small { font: 500 .75rem var(--font); color: var(--no); background: var(--no-bg); padding: 3px 9px; border-radius: 999px; }
+.hex { display: flex; flex-wrap: wrap; gap: 6px; font: 500 .95rem var(--mono); margin-bottom: 18px; }
+.hex span { padding: 5px 7px; border-radius: 7px; background: var(--panel); color: #8D889A; }
+.hex span.sig { background: var(--indigo); color: #fff; animation: glow 1.6s ease-in-out infinite alternate; }
+@keyframes glow { from { box-shadow: 0 0 0 0 rgba(75,63,168,0); } to { box-shadow: 0 0 16px 1px rgba(75,63,168,.45); } }
+.verdict { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: .9375rem; }
+.verdict b { color: var(--ink); font-weight: 600; }
+.verdict .tag { display: inline-flex; align-items: center; gap: 8px; background: var(--panel); color: var(--ink); font-weight: 600; padding: 7px 14px; border-radius: 10px; }
 .verdict .tag::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
 
-/* ---------- scope ---------- */
-.scope { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 6vw, 88px); }
-.cats { display: flex; flex-wrap: wrap; gap: 10px; margin: 28px 0 14px; padding: 0; list-style: none; }
-.cats li { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: #fff; border: 1px solid var(--line); border-radius: 999px; font-weight: 600; font-size: .9375rem; }
-.cats li::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
-.note { color: var(--ink-soft); font-size: .9375rem; max-width: 52ch; }
-.left-alone { list-style: none; margin: 28px 0 0; padding: 0; }
-.left-alone li { position: relative; padding: 13px 0 13px 30px; border-top: 1px solid var(--line); }
-.left-alone li::before { content: ""; position: absolute; left: 0; top: calc(13px + .8em); width: 16px; border-top: 2px dashed #8795AD; }
+.cats { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 14px; padding: 0; list-style: none; }
+.cats li { display: inline-flex; align-items: center; gap: 8px; padding: 7px 13px; background: #fff; border-radius: 999px; font-weight: 500; font-size: .9375rem; box-shadow: 0 1px 2px rgba(11,9,16,.06); }
+.cats li::before { content: ""; width: 9px; height: 9px; border-radius: 3px; background: var(--c); }
+.note { color: var(--ink-soft); font-size: .9375rem; max-width: 50ch; margin: 0; }
+.alone { padding: 24px 26px; }
+.alone h3 { margin-bottom: 6px; }
+.left-alone { list-style: none; margin: 0; padding: 0; }
+.left-alone li { position: relative; padding: 13px 0 13px 30px; border-top: 1px solid var(--line); font-size: .9875rem; }
+.left-alone li:first-child { border-top: 0; }
+.left-alone li::before { content: ""; position: absolute; left: 0; top: calc(13px + .8em); width: 16px; border-top: 2px dashed #B5B1BF; }
 .left-alone code { color: var(--ink-soft); }
 
-/* ---------- folder guard ---------- */
-.guard { list-style: none; margin: 0; padding: 0; background: #fff; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; box-shadow: 0 30px 60px -40px rgba(15,27,51,.45); }
-.guard li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 14px; padding: 14px 18px; border-top: 1px solid var(--line); align-items: center; }
+.guard { list-style: none; margin: 0; padding: 6px 0; }
+.guard li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 14px; padding: 12px 20px; border-top: 1px solid var(--line); align-items: center; }
 .guard li:first-child { border-top: 0; }
-.guard code { font-size: .9rem; overflow-wrap: anywhere; }
-.guard .why { grid-column: 1; font-size: .875rem; color: var(--ink-soft); }
-.pill { grid-row: span 2; grid-column: 2; font: 700 .75rem var(--font); padding: 5px 12px; border-radius: 999px; }
-.pill.ok { color: var(--ok); background: #DDF3E6; }
-.pill.no { color: var(--no); background: #FBE1E1; }
+.guard code { font-size: .875rem; overflow-wrap: anywhere; }
+.guard .why { grid-column: 1; font-size: .8125rem; color: var(--ink-soft); }
+.pill { grid-row: span 2; grid-column: 2; font: 600 .75rem var(--font); padding: 5px 12px; border-radius: 999px; }
+.pill.ok { color: var(--ok); background: var(--ok-bg); }
+.pill.no { color: var(--no); background: var(--no-bg); }
+
+/* ---------- history: centred, rows slide in ---------- */
+.history { text-align: center; padding: clamp(96px, 12vw, 150px) 0 0; }
+.history > p { color: var(--ink-soft); max-width: 48ch; margin: 0 auto 40px; }
+.history .grad { max-width: 620px; margin-inline: auto; padding: clamp(18px, 4vw, 40px); }
+.runs { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; text-align: left; }
+.runs li { display: flex; align-items: center; gap: 14px; padding: 14px 14px 14px 18px; }
+.runs .ico { width: 38px; height: 38px; border-radius: 12px; background: var(--panel); display: grid; place-items: center; flex: none; color: var(--indigo); }
+.runs .ico svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.runs .what { flex: 1; min-width: 0; }
+.runs .what b { display: block; font-weight: 500; }
+.runs .what span { font-size: .8125rem; color: var(--ink-soft); }
+.runs button { font: 500 .8125rem var(--font); border: 0; border-radius: 999px; padding: 8px 14px; background: var(--ink); color: #fff; cursor: pointer; white-space: nowrap; transition: background .2s, color .2s; }
+.runs li.undone { opacity: .75; }
+.runs li.undone button { background: var(--ok-bg); color: var(--ok); }
+.js .runs li { opacity: 0; transform: translateY(14px); transition: opacity .5s, transform .5s cubic-bezier(.2,.7,.2,1); transition-delay: calc(var(--i) * 160ms); }
+.js .runs.in li { opacity: 1; transform: none; }
+.js .runs.in li.undone { opacity: .75; }
 
 /* ---------- download ---------- */
-.get { position: relative; background: var(--ink); color: #fff; padding: clamp(72px, 9vw, 120px) 0; overflow: hidden; }
-.get::before { content: ""; position: absolute; inset: 0; background: radial-gradient(50% 60% at 85% 0%, rgba(76,139,245,.35), transparent 65%), radial-gradient(rgba(255,255,255,.08) 1px, transparent 1.3px) 0 0 / 24px 24px; pointer-events: none; }
-.get .wrap { position: relative; }
-.get-logo { position: absolute; right: 0; top: -8px; width: clamp(72px, 12vw, 140px); filter: drop-shadow(0 20px 40px rgba(76,139,245,.6)); }
-.get h2 { max-width: 14ch; }
-.get .sub { color: #B6C2D9; max-width: 52ch; margin-bottom: 44px; }
-.dl { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(24px, 5vw, 72px); }
-.dl > div { border-top: 1px solid #2D3C5C; padding-top: 26px; }
-.dl p { color: #B6C2D9; max-width: 40ch; }
-.dl code { color: #fff; }
-.dl.mac { margin-top: 56px; }
-.warn { margin-top: 48px; max-width: 68ch; color: #B6C2D9; font-size: .9375rem; border-left: 3px solid #4C8BF5; padding-left: 18px; }
+.get { position: relative; margin-top: clamp(96px, 12vw, 150px); border-radius: 32px; background: var(--panel); padding: clamp(48px, 7vw, 96px) clamp(18px, 5vw, 72px); text-align: center; overflow: hidden; }
+.get::before, .get::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 35% 30%, #fff 0%, #ECEBF4 45%, #D7D5E5 100%); box-shadow: 0 30px 60px -20px rgba(50,34,73,.25); }
+.get::before { width: 220px; height: 220px; left: -70px; top: -60px; }
+.get::after { width: 300px; height: 300px; right: -110px; bottom: -120px; }
+.get > * { position: relative; z-index: 1; }
+.get .sub { color: var(--ink-soft); max-width: 54ch; margin: 0 auto 40px; }
+.dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; max-width: 900px; margin-inline: auto; text-align: left; }
+.dl > div { padding: 26px; display: flex; flex-direction: column; }
+.dl .os { display: inline-flex; align-items: center; gap: 8px; font: 500 .8125rem var(--mono); color: var(--indigo); margin-bottom: 12px; }
+.dl .os svg { width: 15px; height: 15px; }
+.dl p { color: var(--ink-soft); font-size: .9375rem; flex: 1; }
+.dl code { color: var(--ink); }
+.dl .btn { align-self: flex-start; }
+.warns { max-width: 900px; margin: 28px auto 0; display: grid; gap: 12px; text-align: left; }
+.warn { margin: 0; color: var(--ink-soft); font-size: .875rem; background: rgba(255,255,255,.7); border-radius: 14px; padding: 14px 18px; }
 
-footer { padding: 32px 0 44px; color: var(--ink-soft); font-size: .9375rem; }
-footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 28px; justify-content: space-between; }
-footer nav { display: flex; gap: 22px; flex-wrap: wrap; }
+/* ---------- footer ---------- */
+footer { padding: clamp(56px, 8vw, 96px) 0 40px; }
+.foot { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, .6fr)); gap: 32px; }
+.wordmark { font-size: clamp(2.6rem, 6vw, 4.4rem); font-weight: 500; letter-spacing: -.05em; line-height: 1; }
+.wordmark span { color: var(--indigo); }
+.foot h4 { margin: 0 0 14px; font: 500 .8125rem var(--mono); color: var(--ink-soft); }
+.foot ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.foot a { text-decoration: none; }
+.foot a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.legal { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--line); font-size: .875rem; color: var(--ink-soft); }
+
+/* ---------- reveal on scroll ---------- */
+.js .reveal { opacity: 0; transform: translateY(24px); transition: opacity .8s, transform .8s cubic-bezier(.2,.7,.2,1); }
+.js .reveal.in { opacity: 1; transform: none; }
 
 @media (max-width: 900px) {
-  .hero, .two, .scope, .dl { grid-template-columns: 1fr; }
-  h1 { max-width: none; }
-  .promises { grid-template-columns: 1fr; }
-  .promises > div + div { border-left: 0; border-top: 1px solid var(--line); }
-  .promises > div { padding-inline: 16px; }
-  .stage { height: 640px; }
+  .nav { display: none; }
+  .panel, .trust-head, .dl, .foot { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: 1fr; gap: 0; }
+  .stats > div { padding-bottom: 26px; }
+  .stage { height: 620px; }
   .boxes { gap: 6px; padding-inline: 10px; }
   .box { height: 80px; padding-inline: 8px; }
   .box b { font-size: .72rem; }
   .top-actions .btn { display: none; }
-  .get-logo { display: none; }
+  .panel, .hero-panel, .get { border-radius: 24px; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .chip, .box, .box output, .btn, .shots img { transition: none !important; }
+  .chip, .box, .box output, .btn, .shots img, .statement span { transition: none !important; }
   .hex span.sig { animation: none; }
+  .js .reveal, .js .runs li { opacity: 1; transform: none; transition: none; }
 }
 </style>
 </head>
 <body>
 
-<div class="hero-bg" aria-hidden="true"></div>
-
 <div class="bar" id="bar">
   <div class="wrap top">
-    <a class="brand" href="#"><img src="logo.png" alt="" width="36" height="36">TidyDesk</a>
+    <a class="brand" href="#"><img src="logo.png" alt="" width="32" height="32">TidyDesk</a>
+    <nav class="nav" aria-label="Sayfa">
+      <a href="#ozellikler" data-k="nav.f">Özellikler</a>
+      <a href="#guvenlik" data-k="nav.s">Güvenlik</a>
+      <a href="https://github.com/odmcc/TidyDesk">GitHub</a>
+    </nav>
     <div class="top-actions">
       <div class="lang" role="group" aria-label="Language">
         <button type="button" data-lang="tr" aria-pressed="true">TR</button>
@@ -246,55 +307,65 @@ footer nav { display: flex; gap: 22px; flex-wrap: wrap; }
 
 <div class="wrap">
   <section class="hero">
-    <div>
-      <h1 data-k="h1">Masaüstün tek tıkla toparlansın.</h1>
-      <p class="lead" data-k="lead">TidyDesk; Masaüstü, Belgeler ve İndirilenler'deki dosyaları türüne göre klasörlere ayırır. Hiçbir şeyi silmez, hiçbir yere göndermez, yaptığı her işlemi geri alabilirsin.</p>
-      <div class="cta">
-        <a class="btn" href="#indir" data-k="cta.dl">Windows ve Mac için indir</a>
-        <a class="btn quiet" href="https://github.com/odmcc/TidyDesk" data-k="cta.src">Kaynak kodu GitHub'da</a>
-      </div>
-      <p class="fine" data-k="fine">Ücretsiz ve açık kaynak. Windows 10 ve 11 (64-bit), macOS 14 ve sonrası.</p>
+    <span class="badge"><b>3.2</b><span data-k="badge">Windows ve Mac için, ücretsiz</span></span>
+    <h1 data-k="h1">Masaüstün tek tıkla toparlansın.</h1>
+    <p class="lead" data-k="lead">TidyDesk; Masaüstü, Belgeler ve İndirilenler'deki dosyaları türüne göre klasörlere ayırır. Hiçbir şeyi silmez, hiçbir yere göndermez, yaptığı her işlemi geri alabilirsin.</p>
+    <div class="cta">
+      <a class="btn" href="#indir"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 4.5l7.5-1v8H3zM11.5 3.4L21 2v9.5h-9.5zM3 12.5h7.5v8L3 19.5zM11.5 12.5H21V22l-9.5-1.4z"/></svg><span data-k="cta.win">Windows için indir</span></a>
+      <a class="btn light" href="#indir"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg><span data-k="cta.mac">Mac için indir</span></a>
     </div>
+    <p class="fine"><span data-k="fine">Açık kaynak. Windows 10 ve 11 (64-bit), macOS 14 ve sonrası.</span> <a href="https://github.com/odmcc/TidyDesk" data-k="cta.src">Kaynak kodu</a></p>
 
-    <div class="stage" id="stage" aria-label="Demo">
-      <div class="win-bar">
-        <span class="win-title"><img src="logo.png" alt="" width="16" height="16">TidyDesk</span>
-        <span class="win-ctl" aria-hidden="true"><span>&#8212;</span><span>&#9633;</span><span>&#10005;</span></span>
+    <div class="hero-panel">
+      <div class="stage" id="stage" aria-label="Demo">
+        <div class="win-bar">
+          <span class="win-title"><img src="logo.png" alt="" width="16" height="16">TidyDesk</span>
+          <span class="win-ctl" aria-hidden="true"><span>&#8212;</span><span>&#9633;</span><span>&#10005;</span></span>
+        </div>
+        <div class="desk" id="desk"></div>
+        <div class="boxes" id="boxes"></div>
+        <div class="win-foot">
+          <button class="btn" id="go" type="button"></button>
+          <p class="status" id="status" aria-live="polite"></p>
+        </div>
+        <svg class="cursor" id="cursor" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 2l15 9.2-6.6 1.6 3.6 6.8-2.9 1.5-3.6-6.9L4.5 19z" fill="#fff" stroke="#0B0910" stroke-width="1.6" stroke-linejoin="round"/></svg>
       </div>
-      <div class="desk" id="desk"></div>
-      <div class="boxes" id="boxes"></div>
-      <div class="win-foot">
-        <button class="btn" id="go" type="button"></button>
-        <p class="status" id="status" aria-live="polite"></p>
-      </div>
-      <svg class="cursor" id="cursor" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 2l15 9.2-6.6 1.6 3.6 6.8-2.9 1.5-3.6-6.9L4.5 19z" fill="#fff" stroke="#0F1B33" stroke-width="1.6" stroke-linejoin="round"/></svg>
     </div>
   </section>
 </div>
 
-<div class="wrap">
-  <section class="promises" aria-label="Güvence">
+<div class="wrap statement-wrap">
+  <p class="statement" id="statement" data-k="st">Dağınık bir klasör, işinin önüne geçmesin. TidyDesk her dosyayı yerine koyar, hiçbirini silmez, internete çıkmaz ve fikrini değiştirirsen her şeyi geri alır.</p>
+</div>
+
+<div class="wrap" id="guvenlik">
+  <div class="trust-head reveal">
+    <h2 data-k="tr.h">Dosyalarına dokunan bir program güvenilir olmalı.</h2>
+    <p data-k="tr.t">TidyDesk bu yüzden yalnızca taşır, her adımı kaydeder ve bu bilgisayarın dışına hiçbir şey göndermez.</p>
+  </div>
+  <div class="stats reveal">
     <div>
-      <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <div class="num">0<small data-k="n1">silinen dosya</small></div>
       <h3 data-k="p1.h">Hiçbir şey silinmez.</h3>
       <p data-k="p1.t">Dosyalar yalnızca taşınır. Aynı adda bir dosya varsa yenisi <code>rapor (2).pdf</code> adını alır, üstüne yazılmaz.</p>
     </div>
     <div>
-      <div class="ico"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></div>
+      <div class="num">1<small data-k="n2">tıkla geri al</small></div>
       <h3 data-k="p2.h">Her işlem geri alınır.</h3>
       <p data-k="p2.t">Her taşıma, olduğu anda günlüğe yazılır. Uygulamayı yarıda kapatsan bile Geri al çalışır.</p>
     </div>
     <div>
-      <div class="ico"><svg viewBox="0 0 24 24"><path d="M2 8.8a15 15 0 0 1 20 0"/><path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8.5 16a5 5 0 0 1 7 0"/><path d="M12 19.5h.01"/><path d="M3 3l18 18"/></svg></div>
+      <div class="num">0<small data-k="n3">ağ bağlantısı</small></div>
       <h3 data-k="p3.h">İnternete hiç çıkmaz.</h3>
       <p data-k="p3.t">Kodda ağ bağlantısı yok: ölçüm, güncelleme ya da yükleme yok. Dosya türünü anlamak için yalnızca ilk birkaç baytı okur.</p>
     </div>
-  </section>
+  </div>
 </div>
 
-<section class="section">
-  <div class="wrap two">
+<div class="wrap features" id="ozellikler">
+  <section class="panel reveal">
     <div>
+      <span class="eyebrow">01</span>
       <h2 data-k="how.h">Üç adımda biter.</h2>
       <ol class="steps">
         <li><h3 data-k="s1.h">Klasörleri seç</h3><p data-k="s1.t">Masaüstü, Belgeler ve İndirilenler hazır gelir. İstediğin başka bir klasörü de ekleyebilirsin; istersen alt klasörleri de kendi yerlerinde düzenlenir. Her kartta kaç dosyanın düzenleneceği yazar, "Neler taşınacak?" tam listeyi gösterir.</p></li>
@@ -306,27 +377,27 @@ footer nav { display: flex; gap: 22px; flex-wrap: wrap; }
       <img src="screenshot-main.png" alt="TidyDesk ana ekranı: Masaüstü, Belgeler ve İndirilenler kartları" width="720" height="688" loading="lazy">
       <img src="screenshot-done.png" alt="16 dosya toparlandı ekranı, kategori sayılarıyla" width="720" height="688" loading="lazy">
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="section tight-top">
-  <div class="wrap two">
+  <section class="panel reveal">
     <div>
+      <span class="eyebrow">02</span>
       <h2 data-k="sn.h">Adı yok mu? İçine bakar.</h2>
-      <p style="color:var(--ink-soft);max-width:46ch" data-k="sn.t">Uzantısı olmayan bir dosya bile ilk birkaç baytından tanınır. Taranmış bir PDF, PDF klasörüne; adı kaybolmuş bir Word dosyası, Belgeler'e gider. Okuma yalnızca bu bilgisayarda olur.</p>
+      <p data-k="sn.t">Uzantısı olmayan bir dosya bile ilk birkaç baytından tanınır. Taranmış bir PDF, PDF klasörüne; adı kaybolmuş bir Word dosyası, Belgeler'e gider. Okuma yalnızca bu bilgisayarda olur.</p>
     </div>
-    <div class="sniff-card">
-      <div class="tabs" id="tabs"></div>
-      <div class="fname" id="fname"></div>
-      <div class="hex" id="hex" aria-label="İlk baytlar"></div>
-      <div class="verdict" id="verdict"></div>
+    <div class="grad">
+      <div class="float sniff-card">
+        <div class="tabs" id="tabs"></div>
+        <div class="fname" id="fname"></div>
+        <div class="hex" id="hex" aria-label="İlk baytlar"></div>
+        <div class="verdict" id="verdict"></div>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="section tight-top">
-  <div class="wrap scope">
+  <section class="panel reveal">
     <div>
+      <span class="eyebrow">03</span>
       <h2 data-k="sc.h">Ne taşır?</h2>
       <p data-k="sc.t">Uzantısına bakarak şu klasörlere ayırır:</p>
       <ul class="cats">
@@ -342,79 +413,108 @@ footer nav { display: flex; gap: 22px; flex-wrap: wrap; }
       </ul>
       <p class="note" data-k="sc.n">Hiçbirine uymayan dosyalar yerinde kalır; dağınıklığı büyütmez.</p>
     </div>
-    <div>
-      <h2 data-k="la.h">Neye dokunmaz?</h2>
-      <ul class="left-alone">
-        <li data-k="la.1">Kısayollar ve klasörler. Alt klasörlerin içine de girmez.</li>
-        <li data-k="la.2">Gizli ve sistem dosyaları, <code>desktop.ini</code>.</li>
-        <li data-k="la.3">Yarım kalmış indirmeler (<code>.crdownload</code>, <code>.part</code>).</li>
-        <li data-k="la.4">Word, Excel ya da başka bir programda açık olan dosyalar.</li>
-      </ul>
+    <div class="grad">
+      <div class="float alone">
+        <h3 data-k="la.h">Neye dokunmaz?</h3>
+        <ul class="left-alone">
+          <li data-k="la.1">Kısayollar ve klasörler. Alt klasörlerin içine de girmez.</li>
+          <li data-k="la.2">Gizli ve sistem dosyaları, <code>desktop.ini</code>.</li>
+          <li data-k="la.3">Yarım kalmış indirmeler (<code>.crdownload</code>, <code>.part</code>).</li>
+          <li data-k="la.4">Word, Excel ya da başka bir programda açık olan dosyalar.</li>
+        </ul>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="section tight-top">
-  <div class="wrap two">
+  <section class="panel reveal">
     <div>
+      <span class="eyebrow">04</span>
       <h2 data-k="gd.h">Yanlış klasörü seçemezsin.</h2>
-      <p style="color:var(--ink-soft);max-width:46ch" data-k="gd.t">Bir klasörü eklerken ve dosyaları taşımadan hemen önce TidyDesk klasörü denetler. Windows'un ve programların klasörleri ve ağ klasörleri baştan reddedilir. Sistem sürücüsünde yalnızca kendi kullanıcı klasörünün içi kabul edilir; USB bellek ya da ikinci bir disk ise tamamıyla seçilebilir.</p>
+      <p data-k="gd.t">Bir klasörü eklerken ve dosyaları taşımadan hemen önce TidyDesk klasörü denetler. Windows'un ve programların klasörleri ve ağ klasörleri baştan reddedilir. Sistem sürücüsünde yalnızca kendi kullanıcı klasörünün içi kabul edilir; USB bellek ya da ikinci bir disk ise tamamıyla seçilebilir.</p>
     </div>
-    <ul class="guard" id="guard"></ul>
-  </div>
-</section>
+    <ul class="float guard" id="guard"></ul>
+  </section>
+</div>
 
-<section class="get" id="indir">
-  <div class="wrap">
-    <img class="get-logo" src="logo.png" alt="" width="140" height="140">
-    <h2 data-k="dl.h">İndir. İki seçenek var.</h2>
-    <p class="sub" data-k="dl.sub">İkisi de aynı program. Hangisinin sana uyduğunu sen seç.</p>
+<div class="wrap">
+  <section class="history reveal">
+    <h2 data-k="hs.h">Fikrini mi değiştirdin? Sorun değil.</h2>
+    <p data-k="hs.t">Geçmiş ekranında her düzenleme ayrı durur. Bugünkünü, dünkünü ya da geçen haftakini; hangisini istersen tek tıkla geri al.</p>
+    <div class="grad">
+      <ul class="runs" id="runs"></ul>
+    </div>
+  </section>
+
+  <section class="get reveal" id="indir">
+    <h2 data-k="dl.h">Hemen indir.</h2>
+    <p class="sub" data-k="dl.sub">Windows'ta iki seçenek de aynı program: biri kurulumsuz, biri kurulumlu. Mac'te işlemcine uygun olanı seç.</p>
     <div class="dl">
-      <div>
+      <div class="float">
+        <span class="os"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 4.5l7.5-1v8H3zM11.5 3.4L21 2v9.5h-9.5zM3 12.5h7.5v8L3 19.5zM11.5 12.5H21V22l-9.5-1.4z"/></svg>Windows</span>
         <h3 data-k="dl1.h">Taşınabilir</h3>
         <p data-k="dl1.t"><code>TidyDesk.exe</code>: çift tıkla çalışır. USB bellekten de açılır, bilgisayarda iz bırakmaz. Silmek için dosyayı silmen yeter.</p>
-        <a class="btn on-dark" href="https://github.com/odmcc/TidyDesk/releases/latest/download/TidyDesk.exe" data-k="dl1.b">TidyDesk.exe'yi indir</a>
+        <a class="btn" href="https://github.com/odmcc/TidyDesk/releases/latest/download/TidyDesk.exe" data-k="dl1.b">TidyDesk.exe'yi indir</a>
       </div>
-      <div>
+      <div class="float">
+        <span class="os"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 4.5l7.5-1v8H3zM11.5 3.4L21 2v9.5h-9.5zM3 12.5h7.5v8L3 19.5zM11.5 12.5H21V22l-9.5-1.4z"/></svg>Windows</span>
         <h3 data-k="dl2.h">Kurulumlu</h3>
         <p data-k="dl2.t"><code>TidyDesk-Setup.exe</code>: Başlat menüsüne eklenir, "Yüklü uygulamalar"dan kaldırılır. Yönetici izni istemez.</p>
-        <a class="btn on-dark" href="https://github.com/odmcc/TidyDesk/releases/latest/download/TidyDesk-Setup.exe" data-k="dl2.b">Kurulum dosyasını indir</a>
+        <a class="btn" href="https://github.com/odmcc/TidyDesk/releases/latest/download/TidyDesk-Setup.exe" data-k="dl2.b">Kurulum dosyasını indir</a>
       </div>
-    </div>
-    <div class="dl mac">
-      <div>
+      <div class="float">
+        <span class="os"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg>macOS</span>
         <h3 data-k="dl3.h">Mac (Apple Silicon)</h3>
         <p data-k="dl3.t">M1, M2, M3, M4 ve sonrası. <code>.dmg</code> dosyasını aç, TidyDesk'i Uygulamalar klasörüne sürükle.</p>
-        <a class="btn on-dark" href="https://github.com/odmcc/TidyDesk/releases/latest/download/TidyDesk-mac-arm64.dmg" data-k="dl3.b">Apple Silicon için indir</a>
+        <a class="btn" href="https://github.com/odmcc/TidyDesk/releases/latest/download/TidyDesk-mac-arm64.dmg" data-k="dl3.b">Apple Silicon için indir</a>
       </div>
-      <div>
+      <div class="float">
+        <span class="os"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg>macOS</span>
         <h3 data-k="dl4.h">Mac (Intel)</h3>
         <p data-k="dl4.t">Intel işlemcili Mac'ler. Hangisi olduğunu <b>Apple menüsü → Bu Mac Hakkında</b> penceresinde "Çip" ya da "İşlemci" satırı söyler.</p>
-        <a class="btn on-dark" href="https://github.com/odmcc/TidyDesk/releases/latest/download/TidyDesk-mac-x64.dmg" data-k="dl4.b">Intel Mac için indir</a>
+        <a class="btn" href="https://github.com/odmcc/TidyDesk/releases/latest/download/TidyDesk-mac-x64.dmg" data-k="dl4.b">Intel Mac için indir</a>
       </div>
     </div>
-    <p class="warn" data-k="dl.warn">Program henüz kod imzalı değil. Windows ilk açılışta "bilgisayarınızı korudu" uyarısı gösterebilir: <b>Ek bilgi</b>'ye, sonra <b>Yine de çalıştır</b>'a bas. Kaynak kodu açık; istersen kendin derleyebilirsin.</p>
-    <p class="warn" data-k="dl.mwarn">Mac sürümü Apple tarafından onaylanmadı (noter onayı yok). İlk açılışta macOS "doğrulanamadı" der: <b>Bitti</b>'ye bas, sonra <b>Sistem Ayarları → Gizlilik ve Güvenlik</b> sayfasının altındaki <b>Yine de Aç</b> düğmesine bas. Bunu bir kez yapman yeter. macOS, Masaüstü ve diğer klasörler için ayrıca izin sorar. Mac'te açık dosyalar macOS'a sorularak bulunur; ama Önizleme gibi dosyayı açıp hemen kapatan programlar tanınamaz. Her taşıma yine geri alınabilir.</p>
-  </div>
-</section>
+    <div class="warns">
+      <p class="warn" data-k="dl.warn">Program henüz kod imzalı değil. Windows ilk açılışta "bilgisayarınızı korudu" uyarısı gösterebilir: <b>Ek bilgi</b>'ye, sonra <b>Yine de çalıştır</b>'a bas. Kaynak kodu açık; istersen kendin derleyebilirsin.</p>
+      <p class="warn" data-k="dl.mwarn">Mac sürümü Apple tarafından onaylanmadı (noter onayı yok). İlk açılışta macOS "doğrulanamadı" der: <b>Bitti</b>'ye bas, sonra <b>Sistem Ayarları → Gizlilik ve Güvenlik</b> sayfasının altındaki <b>Yine de Aç</b> düğmesine bas. Bunu bir kez yapman yeter. macOS, Masaüstü ve diğer klasörler için ayrıca izin sorar. Mac'te açık dosyalar macOS'a sorularak bulunur; ama Önizleme gibi dosyayı açıp hemen kapatan programlar tanınamaz. Her taşıma yine geri alınabilir.</p>
+    </div>
+  </section>
+</div>
 
 <footer>
   <div class="wrap">
-    <span data-k="ft.l">MIT lisansı. © odmcc</span>
-    <nav>
-      <a href="https://github.com/odmcc/TidyDesk" data-k="ft.src">Kaynak kodu</a>
-      <a href="https://github.com/odmcc/TidyDesk/releases" data-k="ft.rel">Sürümler</a>
-      <a href="https://github.com/odmcc/TidyDesk/issues" data-k="ft.bug">Sorun bildir</a>
-    </nav>
+    <div class="foot">
+      <div class="wordmark">tidydesk<span>.</span></div>
+      <div>
+        <h4 data-k="ft.c1">Ürün</h4>
+        <ul>
+          <li><a href="#indir" data-k="nav.dl">İndir</a></li>
+          <li><a href="#ozellikler" data-k="nav.f">Özellikler</a></li>
+          <li><a href="https://github.com/odmcc/TidyDesk/releases" data-k="ft.rel">Sürümler</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-k="ft.c2">Proje</h4>
+        <ul>
+          <li><a href="https://github.com/odmcc/TidyDesk" data-k="ft.src">Kaynak kodu</a></li>
+          <li><a href="https://github.com/odmcc/TidyDesk/issues" data-k="ft.bug">Sorun bildir</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="legal"><span data-k="ft.l">MIT lisansı. © odmcc</span><span data-k="ft.n">Hiçbir şey silinmez. Her şey geri alınır.</span></div>
   </div>
 </footer>
 
 <script>
 /* ---------- text: Turkish lives in the HTML, English here ---------- */
 const EN = {
-  'nav.dl': 'Download', 'h1': 'Tidy your desktop in one click.',
+  'nav.f': 'Features', 'nav.s': 'Safety', 'nav.dl': 'Download', 'badge': 'For Windows and Mac, free',
+  'h1': 'Tidy your desktop in one click.',
   'lead': 'TidyDesk sorts the files in your Desktop, Documents and Downloads into folders by type. It deletes nothing, sends nothing anywhere, and every run can be undone.',
-  'cta.dl': 'Download for Windows and Mac', 'cta.src': 'Source code on GitHub', 'fine': 'Free and open source. Windows 10 and 11 (64-bit), macOS 14 and later.',
+  'cta.win': 'Download for Windows', 'cta.mac': 'Download for Mac', 'cta.src': 'Source code', 'fine': 'Open source. Windows 10 and 11 (64-bit), macOS 14 and later.',
+  'st': 'A messy folder shouldn\'t get in the way of your work. TidyDesk puts every file in its place, deletes none of them, never goes online, and puts everything back if you change your mind.',
+  'tr.h': 'A program that touches your files has to be trustworthy.', 'tr.t': 'That\'s why TidyDesk only moves files, records every step, and sends nothing off this computer.',
+  'n1': 'files deleted', 'n2': 'click to undo', 'n3': 'network connections',
   'p1.h': 'Nothing is deleted.', 'p1.t': 'Files are only moved. If a file with the same name exists, the new one becomes <code>report (2).pdf</code> instead of overwriting it.',
   'p2.h': 'Every run can be undone.', 'p2.t': 'Each move is written to a journal the moment it happens, so Undo works even if you close the app halfway.',
   'p3.h': 'It never goes online.', 'p3.t': 'The code has no networking: no telemetry, updates or uploads. To recognize a file type it reads only the first few bytes.',
@@ -430,22 +530,26 @@ const EN = {
   'la.1': 'Shortcuts and folders. It never goes into subfolders.', 'la.2': 'Hidden and system files, <code>desktop.ini</code>.',
   'la.3': 'Unfinished downloads (<code>.crdownload</code>, <code>.part</code>).', 'la.4': 'Files that are open in Word, Excel or another program.',
   'gd.h': 'You can\'t pick the wrong folder.', 'gd.t': 'TidyDesk checks a folder when you add it and again right before files move. Windows and program folders and network folders are refused outright. On the system drive only the inside of your own user folder is accepted; a USB stick or a second disk can be picked as a whole.',
-  'dl.h': 'Download. Two options.', 'dl.sub': 'Both are the same program. Pick the one that suits you.',
+  'hs.h': 'Changed your mind? No problem.', 'hs.t': 'The History screen keeps every cleanup separate. Today\'s, yesterday\'s or last week\'s: undo whichever you want with one click.',
+  'dl.h': 'Get it now.', 'dl.sub': 'On Windows both options are the same program: one portable, one with an installer. On a Mac, pick the one that matches your processor.',
   'dl1.h': 'Portable', 'dl1.t': '<code>TidyDesk.exe</code>: just double-click it. Runs from a USB stick and leaves no trace on the PC. To remove it, delete the file.', 'dl1.b': 'Download TidyDesk.exe',
   'dl2.h': 'Installer', 'dl2.t': '<code>TidyDesk-Setup.exe</code>: adds TidyDesk to the Start menu and to Installed apps. No administrator rights needed.', 'dl2.b': 'Download the installer',
   'dl.warn': 'The program is not code-signed yet. On first launch Windows may show "Windows protected your PC": press <b>More info</b>, then <b>Run anyway</b>. The source is open, so you can build it yourself.',
   'dl3.h': 'Mac (Apple Silicon)', 'dl3.t': 'M1, M2, M3, M4 and later. Open the <code>.dmg</code> and drag TidyDesk into Applications.', 'dl3.b': 'Download for Apple Silicon',
   'dl4.h': 'Mac (Intel)', 'dl4.t': 'Macs with an Intel processor. To check, open <b>Apple menu → About This Mac</b> and look at the "Chip" or "Processor" line.', 'dl4.b': 'Download for Intel Mac',
   'dl.mwarn': 'The Mac version is not notarized by Apple. On first launch macOS says it can\'t verify the app: press <b>Done</b>, then press <b>Open Anyway</b> at the bottom of <b>System Settings → Privacy &amp; Security</b>. You only do this once. macOS also asks for permission to access the Desktop and other folders. On a Mac, open files are found by asking macOS; programs that open a file and close it right away, like Preview, can\'t be detected. Every move can still be undone.',
-  'ft.l': 'MIT license. © odmcc', 'ft.src': 'Source code', 'ft.rel': 'Releases', 'ft.bug': 'Report an issue'
+  'ft.c1': 'Product', 'ft.c2': 'Project', 'ft.l': 'MIT license. © odmcc', 'ft.n': 'Nothing is deleted. Everything can be undone.',
+  'ft.src': 'Source code', 'ft.rel': 'Releases', 'ft.bug': 'Report an issue'
 };
 const T = {
   tr: { s1: 'Masaüstü: 13 öğe', s2: 'dosya toparlandı. Hiçbiri silinmedi.', s3: 'Bu 3 öğeye dokunulmadı.', go: n => `${n} dosyayı toparla`, undo: 'Geri al', stay: 'yerinde',
         folders: ['PDF', 'Tablolar', 'Belgeler', 'Görseller', 'Arşivler'], noExt: 'uzantı yok', first: 'İlk baytlar', sig: 'imzası', goesTo: 'klasörüne gider',
-        ok: 'Seçilebilir', no: 'Reddedilir' },
+        ok: 'Seçilebilir', no: 'Reddedilir', undone: 'Geri alındı',
+        runs: [['Masaüstü', 'Bugün, 14:32', 16], ['İndirilenler', 'Dün, 09:10', 42], ['Belgeler', '12 Kasım', 8]], files: 'dosya' },
   en: { s1: 'Desktop: 13 items', s2: 'files tidied up. Nothing was deleted.', s3: 'These 3 items were left alone.', go: n => `Tidy up ${n} files`, undo: 'Undo', stay: 'left alone',
         folders: ['PDF', 'Spreadsheets', 'Documents', 'Images', 'Archives'], noExt: 'no extension', first: 'First bytes', sig: 'signature', goesTo: 'folder',
-        ok: 'Allowed', no: 'Refused' }
+        ok: 'Allowed', no: 'Refused', undone: 'Undone',
+        runs: [['Desktop', 'Today, 14:32', 16], ['Downloads', 'Yesterday, 09:10', 42], ['Documents', '12 November', 8]], files: 'files' }
 };
 /* file samples: real signatures, as read by ContentSniffer */
 const SAMPLES = [
@@ -541,7 +645,27 @@ async function intro() {
   await sleep(500);
   cursor.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 400, fill: 'forwards' });
 }
-if (!reduce) setTimeout(() => { if (!touched) intro(); }, 1300);
+if (!reduce) setTimeout(() => { if (!touched) intro(); }, 1500);
+
+/* ---------- statement: each word takes its colour as the paragraph scrolls past ---------- */
+const statement = document.getElementById('statement');
+let words = [];
+function splitStatement() {
+  const parts = statement.textContent.trim().split(/\s+/);
+  statement.innerHTML = parts.map((w, i) => {
+    const t = parts.length > 1 ? i / (parts.length - 1) : 0; // mauve → indigo along the sentence
+    return `<span style="--w:color-mix(in srgb, var(--indigo) ${Math.round(t * 100)}%, var(--mauve))">${w}</span>`;
+  }).join(' ');
+  words = [...statement.children];
+  paintStatement();
+}
+function paintStatement() {
+  if (reduce) { words.forEach(w => w.classList.add('on')); return; }
+  const r = statement.getBoundingClientRect(), vh = innerHeight;
+  const p = Math.min(1, Math.max(0, (vh * .85 - r.top) / (r.height + vh * .35)));
+  const lit = Math.round(p * words.length);
+  words.forEach((w, i) => w.classList.toggle('on', i < lit));
+}
 
 /* ---------- content sniffing demo ---------- */
 const tabsEl = document.getElementById('tabs'), fname = document.getElementById('fname'), hex = document.getElementById('hex'), verdict = document.getElementById('verdict');
@@ -569,6 +693,21 @@ function renderGuard() {
     `<li><code>${path}</code><span class="pill ${ok ? 'ok' : 'no'}">${ok ? t.ok : t.no}</span><span class="why">${why[lang]}</span></li>`).join('');
 }
 
+/* ---------- history: each run has its own undo ---------- */
+const runsEl = document.getElementById('runs'), undone = new Set();
+const UNDO_ICON = '<svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>';
+function renderRuns() {
+  const t = T[lang];
+  runsEl.innerHTML = t.runs.map(([folder, when, n], i) =>
+    `<li class="float${undone.has(i) ? ' undone' : ''}" style="--i:${i}"><span class="ico">${UNDO_ICON}</span>` +
+    `<span class="what"><b>${folder}: ${n} ${t.files}</b><span>${when}</span></span>` +
+    `<button type="button" data-i="${i}">${undone.has(i) ? '✓ ' + t.undone : t.undo}</button></li>`).join('');
+}
+runsEl.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const i = +b.dataset.i; undone.has(i) ? undone.delete(i) : undone.add(i); renderRuns();
+});
+
 /* ---------- screenshots tilt toward the pointer (mouse only) ---------- */
 const shots = document.getElementById('shots');
 if (!reduce && matchMedia('(hover: hover)').matches) {
@@ -580,16 +719,27 @@ if (!reduce && matchMedia('(hover: hover)').matches) {
   shots.addEventListener('pointerleave', () => { shots.style.setProperty('--ry', '0deg'); shots.style.setProperty('--rx', '0deg'); });
 }
 
-/* ---------- header gets a backdrop once you scroll ---------- */
+/* ---------- sections fade up once, history rows slide in ---------- */
+const io = new IntersectionObserver(entries => entries.forEach(e => {
+  if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+}), { threshold: .15 });
+document.querySelectorAll('.reveal, .runs').forEach(el => io.observe(el));
+
+/* ---------- header backdrop + statement colour on scroll ---------- */
 const bar = document.getElementById('bar');
-addEventListener('scroll', () => bar.classList.toggle('scrolled', scrollY > 8), { passive: true });
+let ticking = false;
+addEventListener('scroll', () => {
+  if (ticking) return; ticking = true;
+  requestAnimationFrame(() => { bar.classList.toggle('scrolled', scrollY > 8); paintStatement(); ticking = false; });
+}, { passive: true });
+addEventListener('resize', paintStatement);
 
 function applyLang(l) {
   lang = l; document.documentElement.lang = l;
   trHTML.forEach((tr, el) => { el.innerHTML = l === 'tr' ? tr : (EN[el.dataset.k] ?? tr); });
   document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === l)));
   try { localStorage.setItem('td-lang', l); } catch {}
-  renderDemo(); renderSample(); renderGuard();
+  splitStatement(); renderDemo(); renderSample(); renderGuard(); renderRuns();
 }
 document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => applyLang(b.dataset.lang)));
 applyLang(lang);
