@@ -277,6 +277,18 @@ footer { padding: clamp(56px, 8vw, 96px) 0 40px; }
   .top-actions .btn { display: none; }
   .panel, .hero-panel, .get { border-radius: 24px; }
 }
+@media (max-width: 600px) {
+  .chip { font-size: .72rem; padding: 5px 9px 5px 7px; }
+  .guard li { grid-template-columns: minmax(0, 1fr) auto; padding: 12px 16px; }
+  .guard code { grid-column: 1 / -1; font-size: .8125rem; }
+  .guard .why { grid-column: 1; }
+  .pill { grid-row: auto; grid-column: 2; align-self: center; }
+  .grad, .history .grad { padding: 12px; border-radius: 18px; }
+  .runs li { gap: 10px; padding: 12px; }
+  .runs .ico { display: none; }
+  .foot { grid-template-columns: 1fr 1fr; }
+  .wordmark { grid-column: 1 / -1; }
+}
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .chip, .box, .box output, .btn, .shots img, .statement span { transition: none !important; }
@@ -601,6 +613,17 @@ const chips = FILES.map(([name, folder, color, x, y, r], i) => {
   desk.appendChild(el); return { el, folder };
 });
 let tidy = false, touched = false;
+/* on a phone the desk is narrow: same files, laid out in two columns so none overlap or spill */
+const MOBILE = [[4, 3], [52, 4], [6, 15], [50, 16], [4, 27], [53, 28], [6, 39], [51, 40], [4, 51], [52, 52], [5, 63], [51, 64], [12, 76]];
+const narrow = matchMedia('(max-width: 600px)');
+function placeChips() {
+  chips.forEach((c, i) => {
+    const [x, y] = narrow.matches ? MOBILE[i] : [FILES[i][3], FILES[i][4]];
+    c.el.style.left = x + '%'; c.el.style.top = y + '%';
+  });
+}
+placeChips();
+narrow.addEventListener('change', placeChips);
 
 function renderDemo() {
   const t = T[lang];
